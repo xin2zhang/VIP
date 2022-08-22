@@ -1,0 +1,32 @@
+--grid points in x direction (nx)
+200
+--grid points in z direction (nz)
+120
+--pml points (pml0)
+10
+--Finite difference order (Lc)
+3
+--Total number of sources (ns)
+10
+--Total time steps (nt)
+2501
+--Shot interval in grid points (ds)
+20
+--Grid number of the first shot to the left of the model (ns0)
+10
+--Depth of source in grid points (depths)
+1
+--Depth of receiver in grid points (depthr)
+17
+--Receiver interval in grid points (dr)
+1
+--Time step interval of saved wavefield during forward (nt_interval)
+2
+--Grid spacing in x direction (dx)
+20.0
+--Grid spacing in z direction (dz)
+20.0
+--Time step (dt)
+0.002
+--Donimate frequency (f0)
+10.0

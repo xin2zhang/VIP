@@ -2,7 +2,7 @@
 VFWI
 ===============================
 
-variational Full-waveform inversion using Stein variational gradient descent
+variational Full-waveform inversion and travel time tomography
 
 Authors
 ----------
