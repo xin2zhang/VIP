@@ -2,7 +2,7 @@
 VFWI
 ===============================
 
-variational Full-waveform inversion and travel time tomography
+Variational Full-waveform inversion and travel time tomography
 
 Authors
 ----------
@@ -16,12 +16,26 @@ Cython, dask
 Install
 ------------
 
-In the svgd folder, build svgd related Cython code first
+In the ``VFWI`` folder, run
 
 
 .. code-block:: sh
 	
-   	cd svgd
-	python setup.py build_ext -i
+    sh setup.sh
 
-There are 2D and 3D code in the respective folder. See details in the README file in each folder.
+This builds up the VFWI package, but does not install the package into the python path.
+As a result, to use the package we need to tell python where the package is. For example,
+when running scripts, do
+
+.. code-block:: python
+    
+    PYTHONPATH=/your/vfwi/path python vfwi_example.py
+
+See examples in ``tests`` folder. Instead you may want to install the package,
+
+.. code-block:: sh
+
+    sh setup.sh install
+
+This will install the package into your python path, after which the package can be used directly
+in your scripts.
