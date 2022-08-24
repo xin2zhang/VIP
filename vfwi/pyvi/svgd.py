@@ -86,7 +86,7 @@ class SVGD():
         if(chunks is None):
             chunks = theta.shape
 
-        loss, grad, mask = self.lnprob(theta, chunks=chunks[0])
+        loss, grad, mask = self.lnprob(theta)
         if(mkernel is None):
             mkernel = np.full((theta.shape[1],),fill_value=1.0)
 
@@ -142,8 +142,8 @@ class SVGD():
             gamma: decaying rate for stepsize
             decay_step: the number of steps to decay the stepsize
             alpha, beta: hyperparameter for sgd and adam, for sgd only alpha is ued
-            chunks: chunks of particles for calculation, default n
             burn_in, thin: not used, just for consistent arguments
+            chunks: chunks of theta for calculation, default theta.shape
         Return
             losses: mean loss value for each iterations, vector of length n
             The final particles are stored at the hdf5 file specified by self.out, so no return samples
@@ -210,7 +210,7 @@ class sSVGD():
         Input
             theta: the current value of variable (transformed), shape (n,dim)
             mkernel: the vector of the diagonal matrix with length dim, if using a diagonal matrix kernel
-            chunks: chunks of particles for calculation, default n
+            chunks: chunks of theta for calculation, default theta.shape
         Return
             update_step: update at each iteration
             loss: mean loss value across particles
@@ -220,7 +220,7 @@ class sSVGD():
         if(mkernel is None):
             mkernel = np.full((theta.shape[1],),fill_value=1.0)
 
-        loss, grad, _ = self.lnprob(theta, chunks=chunks[0])
+        loss, grad, _ = self.lnprob(theta)
         pgrad = np.copy(grad)
         kxy, sgrad = svgd_grad(theta, grad, kernel=self.kernel, w=mkernel, h=self.h, chunks=chunks)
         print(f'max, mean, median, and min grads for svgd: {np.max(abs(sgrad))} {np.mean(abs(sgrad))} {np.median(abs(sgrad))} {np.min(abs(sgrad))}')
@@ -248,7 +248,7 @@ class sSVGD():
             burn_in: burn_in period
             thin: thining of the chain
             alpha, beta: hyperparameter for sgd and adam, for sgd only alpha is ued
-            chunks: chunks of particles for calculation, default n
+            chunks: chunks of theta for calculation, default theta.shape
         Return
             losses: mean loss value for each iterations, vector of length n
             The final particles are stored at the hdf5 file specified by self.out, so no return samples

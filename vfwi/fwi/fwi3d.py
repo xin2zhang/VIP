@@ -6,18 +6,20 @@ class fwi3d():
     '''
     A class that implements an interface of an external 3D FWI code
     '''
-    def __init__(self, config, prior, mask=None, client=None):
+    def __init__(self, config, prior, mask=None, client=None, chunks=None):
         '''
         config: a python configparser.ConfigParser()
         prior: a prior class, see prior/prior.py
         mask: a mask array where the parameters will be fixed, default no mask
         client: a dask client to submit fwi running, must be specified
+        chunks: chunks of particles for calculation, default n
         '''
 
         self.config = config
         self.sigma = config.getfloat('svgd','sigma')
         self.client = client
         self.prior = prior
+        self.chunks = chunks
 
         # create mask matrix for model parameters that are fixed
         nx = config.getint('svgd','nx')
@@ -48,7 +50,7 @@ class fwi3d():
         # log likelihood
         return 0.5*loss/self.sigma**2, grad
 
-    def dlnprob(self, theta, chunks=None):
+    def dlnprob(self, theta):
         '''
         Compute gradient of log posterior pdf
         Input
@@ -67,7 +69,7 @@ class fwi3d():
         print('Simulation takes '+str(time.time()-t))
 
         # compute gradient including the prior
-        grad, mask = self.prior.grad(theta, grad=grad, chunks=chunks)
+        grad, mask = self.prior.grad(theta, grad=grad, chunks=self.chunks)
         grad[:,self.mask] = 0
         print(f'Max. Mean and Median grad: {np.max(abs(grad))} {np.mean(abs(grad))} {np.median(abs(grad))}')
         #print(f'max, mean and median grads after transform: {np.max(abs(grad))} {np.mean(abs(grad))} {np.median(abs(grad))}')

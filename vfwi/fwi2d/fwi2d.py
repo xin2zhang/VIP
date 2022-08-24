@@ -47,12 +47,11 @@ class fwi2d():
         # log likelihood
         return 0.5*loss/self.sigma**2, grad
 
-    def dlnprob(self, theta, chunks=None):
+    def dlnprob(self, theta):
         '''
         Compute gradient of log posterior pdf
         Input
             theta: 2D array with dimension of nparticles*nparameters
-            chunks: chunks of particles for calculation, default n, not used here
         Return
             lglike: a vector of log likelihood for each particle
             grad: each row contains the gradient for each particle

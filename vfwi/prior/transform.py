@@ -1,7 +1,7 @@
 import numpy as np
 from vfwi.kernel.pytrans import *
 
-def trans(x,batchsize=None,trans=1,lb=0,ub=1e8):
+def trans(x, batchsize=None, trans=1, lb=0, ub=1e8):
     '''
     Transform between constrained and unconstrained variable
     Input
@@ -28,7 +28,7 @@ def trans(x,batchsize=None,trans=1,lb=0,ub=1e8):
                                      np.ascontiguousarray(ub,dtype=np.float64))
     return x
 
-def trans_grad(grad,x,mask=None,batchsize=None,lb=0,ub=1e8):
+def trans_grad(grad, x, mask=None, batchsize=None, lb=0, ub=1e8):
     '''
     Gradient after transforming from constrained variable to unconstrained variable
     Input
