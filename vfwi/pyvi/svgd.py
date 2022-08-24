@@ -96,7 +96,41 @@ class SVGD():
 
         return loss, grad, mask
 
-    def sample(self, x0, optimizer='sgd', n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, alpha=0.9, beta=0.95, burn_in=None, thin=None, chunks=None):
+    def __dsample(self, theta, n_iter=100, stepsize=1e-2, gamma=1.0, decay_step=1, alpha=0.9, chunks=None):
+
+        # initialise some variables
+        losses = np.zeros((n_iter,))
+        prev_grad = np.zeros(theta.shape,dtype=np.float64)
+        prev_theta = np.zeros(theta.shape,dtype=np.float64)
+        mkernel = np.full((theta.shape[1],),fill_value=1.0, dtype=np.float64)
+        w = weight(dim=theta.shape[1], approx=self.weight, threshold=self.threshold)
+        moment = np.zeros(theta.shape,dtype=np.float64)
+
+        # sampling
+        for i in range(n_iter):
+            #print(f'max, mean, median and min kernel: {np.max(abs(mkernel))} {np.mean(abs(mkernel))} {np.median(abs(mkernel))} {np.min(abs(mkernel))}')
+            print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
+            loss, grad, mask = self.grad(theta, mkernel=mkernel, chunks=chunks)
+
+            mkernel = w.diag(theta, prev_theta, grad, prev_grad)
+            prev_grad = np.copy(grad)
+            prev_theta = np.copy(theta)
+
+            moment[mask] = 0
+            moment = alpha*moment + stepsize*grad
+            theta += moment
+            losses[i] = loss
+            print('Average loss: '+str(loss))
+
+            # decay the stepsize if required
+            if((i+1)%decay_step == 0):
+                stepsize = stepsize * gamma
+
+        return theta, losses
+
+
+    def sample(self, x0, optimizer='sgd', n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
+               pre_update=0, pre_step=1e-3, alpha=0.9, beta=0.95, burn_in=None, thin=None, chunks=None):
         '''
         Using svgd to sample a probability density function
         Input
@@ -120,18 +154,20 @@ class SVGD():
         if(chunks is None):
             chunks = x0.shape
 
+        pre_loss = []
+        if(pre_update>0):
+            op = optm.optimizer(x0.shape, self.grad, method='sgd', alpha=alpha)
+            theta, pre_loss = op.optim(x0, n_iter=pre_update, stepsize=pre_step)
+
         if(self.kernel=='rbf'):
             op = optm.optimizer(x0.shape, self.grad, method=optimizer, alpha=alpha, beta=beta)
-            theta, losses = op.optim(x0, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step)
+            theta, losses = op.optim(theta, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step)
 
-        #if(self.kernel=='diagonal'):
-        #    w = weight(x0.shape[1], approx=self.diag, alpha=alpha)
-        #stepsize = np.full((self.iteration,),self.stepsize)
-        #for i in range(1,self.iteration):
-        #    if(i%self.decay_step == 0):
-        #        stepsize[i] = self.stepsize * self.gamma
-        #    else:
-        #        stepsize[i] = stepsize[i-1]
+        if(self.kernel=='diagonal'):
+            theta, losses = self.__dsample(theta, n_iter=n_iter, stepsize=stepsize, gamma=gamma,
+                                           decay_step=decay_step, alpha=alpha, chunks=chunks)
+
+        losses = np.concatenate((pre_loss,losses),axis=0)
 
         f = h5py.File(self.out,'w')
         samples = f.create_dataset('samples',(1,x0.shape[0],x0.shape[1]),
@@ -198,7 +234,8 @@ class sSVGD():
 
         return update_step, np.mean(loss), pgrad
 
-    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
+    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, pre_update=5, pre_step=1e-3,
+               burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
         '''
         Using ssvgd to sample a probability density function
         Input
@@ -224,7 +261,7 @@ class sSVGD():
             chunks = x0.shape
 
         theta = np.copy(x0).astype(np.float64)
-        losses = np.zeros((n_iter,))
+        losses = np.zeros((n_iter+pre_update,))
 
         # create a hdf5 file to store samples on disk
         nsamples = int((n_iter-burn_in)/thin)
@@ -238,11 +275,26 @@ class sSVGD():
             f['samples'].resize((f['samples'].shape[0]+nsamples),axis=0)
             samples = f['samples']
 
+        # initialise some variables
         sample_count = 0
         prev_grad = np.zeros(x0.shape,dtype=np.float64)
         prev_theta = np.zeros(x0.shape,dtype=np.float64)
         mkernel = np.full((theta.shape[1],),fill_value=1.0, dtype=np.float64)
         w = weight(dim=theta.shape[1], approx=self.weight, threshold=self.threshold)
+
+        # pre-update for stability
+        for i in range(pre_update):
+            print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
+            update_step, loss, pgrad = self.update(theta, step=pre_step, mkernel=mkernel, chunks=chunks)
+            mkernel = w.diag(theta, prev_theta, pgrad, prev_grad)
+            prev_grad = np.copy(pgrad)
+            prev_theta = np.copy(theta)
+
+            theta = theta + update_step
+            losses[i] = loss
+            print('Average loss: '+str(loss))
+
+        # real sampling
         for i in range(n_iter):
             #print(f'max, mean, median and min kernel: {np.max(abs(mkernel))} {np.mean(abs(mkernel))} {np.median(abs(mkernel))} {np.min(abs(mkernel))}')
             print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
@@ -253,7 +305,7 @@ class sSVGD():
             prev_theta = np.copy(theta)
 
             theta = theta + update_step
-            losses[i] = loss
+            losses[i+pre_update] = loss
             print('Average loss: '+str(loss))
 
             # decay the stepsize if required

@@ -36,8 +36,8 @@ class optimizer():
         '''
 
         loss, grad, mask = self.lnprob(theta)
-        self.num = self.alpha*self.num + step*grad
         self.num[mask] = 0
+        self.num = self.alpha*self.num + step*grad
         update = self.num
 
         return update, loss
