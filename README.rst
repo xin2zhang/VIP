@@ -61,7 +61,7 @@ posterior pdf function w.r.t parameters. For example,
         return loss, grad, None
 
 where loss is the misfit value (or negative logarithm of posterior pdf value), grad is the gradient. The third
-output is used to return other auxilary variables (e.g., a mask array), and can be safely ignored. Thereafter,
+output is used to return other auxiliary variables (e.g., a mask array), and can be safely ignored. Thereafter,
 
 .. code-block:: python
 

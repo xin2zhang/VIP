@@ -50,7 +50,7 @@ class SVGD():
     '''
 
     def __init__(self, lnprob, kernel='rbf', h=1.0, weight='grad', mask=None,
-                 out='samples.hdf5'):
+                 threshold=0.02, out='samples.hdf5'):
         '''
         lnprob: log of the probability density function, usually negtive misfit function
         kernel: kernel function, including rbf and diagonal matrix kernel
@@ -68,6 +68,7 @@ class SVGD():
         self.kernel = kernel
         self.weight = weight
         self.mask = mask
+        self.threshold = threshold
         self.out = out
 
     def grad(self, theta, mkernel=None, chunks=None):
@@ -234,7 +235,7 @@ class sSVGD():
 
         return update_step, np.mean(loss), pgrad
 
-    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, pre_update=5, pre_step=1e-3,
+    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, pre_update=0, pre_step=1e-3,
                burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
         '''
         Using ssvgd to sample a probability density function
