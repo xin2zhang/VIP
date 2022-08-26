@@ -45,8 +45,7 @@ def svgd_grad(x, grad, kernel='rbf', w=None, h=1.0, chunks=None):
 
 class SVGD():
     '''
-    Class SVGD()
-        A class that implements SVGD algorithm
+    A class that implements SVGD algorithm
     '''
 
     def __init__(self, lnprob, kernel='rbf', h=1.0, weight='grad', mask=None,
@@ -179,7 +178,9 @@ class SVGD():
         return losses
 
 class sSVGD():
-
+    '''
+    A class that implements stochastic SVGD algorithm.
+    '''
     def __init__(self, lnprob, kernel='rbf', h=1.0, mask=None, threshold=0.02,
                  weight='grad', out='samples.hdf5'):
         '''
@@ -327,8 +328,8 @@ class weight():
     A class that generates a weigting vector for kernel functions
     '''
 
-    def __init__(self, dim=100, approx='grad', alpha=0.9, beta=0.9,
-                 quantile=0.5, threshold=0.02):
+    def __init__(self, dim=100, approx='grad', alpha=0.95, beta=0.9,
+                 quantile=0.8, threshold=0.02):
 
         self.dm = np.zeros((dim,),dtype=np.float64)
         self.dg = np.zeros((dim,),dtype=np.float64)

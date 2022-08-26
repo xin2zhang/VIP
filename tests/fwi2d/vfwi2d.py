@@ -155,6 +155,7 @@ if __name__=="__main__":
     mask = np.full((nz,nx),False)
     mask[0:18,:] = True
     data = np.load(config.get('FWI','datafile'))
+    data = data.transpose(0,2,1).flatten()
     simulator = fwi2d(config, ppdf, data, mask=mask.flatten(), client=client)
 
     # svgd sampler
