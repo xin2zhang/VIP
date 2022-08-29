@@ -23,8 +23,8 @@ In the ``VFWI`` folder, run
 	
     sh setup.sh
 
-This builds up the VFWI package, but does not install the package into the python path.
-As a result, to use the package we need to tell python where the package is. For example,
+This builds up the VFWI package, but does not install the package into your Python environment.
+As a result, to use the package you need to tell python where the package is. For example,
 when running scripts, do
 
 .. code-block:: python
@@ -37,7 +37,7 @@ See examples in ``tests`` folder. Instead you may want to install the package,
 
     sh setup.sh install
 
-This will install the package into your python path, after which the package can be used directly
+This will install the package into your python environment, after which the package can be used directly
 in your scripts.
 
 Variational Inversion
