@@ -2,7 +2,8 @@
 VIP
 ===============================
 
-Variational Imaging Package
+Variational Imaging Package, which implents variational methods for geophysical imaging problems, including
+seismic travel time tomography and full waveform inversion.
 
 Authors
 ----------
@@ -98,7 +99,7 @@ Examples
 - For a complete 2D travel time tomography example, please see the example in ``tests/tomo2d``.
 - For an example implementation of 3D Full-waveform inversion, please see the example in ``tests/fwi3d``. Note
   that this requires users to provide an external 3D FWI code to calculate misfit values and gradients. See details
-  in ``VIP/fwi``.
+  in ``vip/fwi``.
 
 References
 ----------
