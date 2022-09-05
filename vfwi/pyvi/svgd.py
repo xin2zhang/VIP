@@ -1,6 +1,6 @@
 import numpy as np
-from vfwi.kernel.pykernel import *
-import vfwi.pyvi.optimizer as optm
+from vip.kernel.pykernel import *
+import vip.pyvi.optimizer as optm
 import h5py
 import os.path
 
@@ -86,6 +86,8 @@ class SVGD():
             chunks = theta.shape
 
         loss, grad, mask = self.lnprob(theta)
+        if(mask is None):
+            mask = np.full((theta.shape),fill_value=False)
         if(mkernel is None):
             mkernel = np.full((theta.shape[1],),fill_value=1.0)
 
