@@ -4,16 +4,16 @@ import matplotlib.pyplot as plt
 import os
 import h5py
 
-from vfwi.prior.transform import trans
-from vfwi.fwi2d.fwi2d import fwi2d
-from vfwi.pyvi.svgd import SVGD, sSVGD
+from vip.prior.transform import trans
+from vip.fwi2d.fwi2d import fwi2d
+from vip.pyvi.svgd import SVGD, sSVGD
 
 from datetime import datetime
 import time
 import configparser
-import vfwi.fwi.dask_utils as du
-from vfwi.prior.prior import prior
-from vfwi.prior.pdf import Uniform, Gaussian
+import vip.fwi.dask_utils as du
+from vip.prior.prior import prior
+from vip.prior.pdf import Uniform, Gaussian
 
 import argparse
 import sys

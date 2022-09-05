@@ -1,8 +1,8 @@
 ===============================
-VFWI
+VIP
 ===============================
 
-Variational Full-waveform inversion and travel time tomography
+Variational Imaging Package
 
 Authors
 ----------
@@ -10,26 +10,26 @@ Authors
 
 Requirements
 ------------
-Cython, dask
+Cython, Dask, H5py
 
 
 Install
 ------------
 
-In the ``VFWI`` folder, run
+In the ``VIP`` folder, run
 
 
 .. code-block:: sh
 	
     sh setup.sh
 
-This builds up the VFWI package, but does not install the package into your Python environment.
+This builds up the VIP package, but does not install the package into your Python environment.
 As a result, to use the package you need to tell python where the package is. For example,
 when running scripts, do
 
 .. code-block:: python
     
-    PYTHONPATH=/your/vfwi/path python vfwi_example.py
+    PYTHONPATH=/your/VIP/path python vip_example.py
 
 See examples in ``tests`` folder. Instead you may want to install the package,
 
@@ -37,18 +37,18 @@ See examples in ``tests`` folder. Instead you may want to install the package,
 
     sh setup.sh install
 
-This will install the package into your python environment, after which the package can be used directly
+This will install the package into your Python environment, after which the package can be used directly
 in your scripts.
 
 Variational Inversion
 ---------------------
 This package implements three different variational inference methods: ``ADVI (mean field)``,
-``SVGD``, and ``Stochastic SVGD (sSVGD)``. To use them,
+``SVGD``, and ``stochastic SVGD (sSVGD)``. To use them,
 
 .. code-block:: python
 
-    from vfwi.pyvi.svgd import SVGD, sSVGD
-    from vfwi.pyvi.advi import ADVI
+    from vip.pyvi.svgd import SVGD, sSVGD
+    from vip.pyvi.advi import ADVI
 
 All methods require a function that takes model parameters as input and calculates the gradients of logarithm
 posterior pdf function w.r.t parameters. For example,
@@ -82,7 +82,15 @@ algorithms include ``sgd``, ``adagrad``, ``adadelta`` and ``adam``. To use sSVGD
     ssvgd = sSVGD(dlnprob, kernel='rbf')
     losses = ssvgd.sample(x0, n_iter=2000, stepsize=0.01, burn_in=1000)
 
-This will sample the posterior using sSVGD method for 2,000 iterations with a burn-in period of 1,000.
+This will sample the posterior using sSVGD method for 2,000 iterations with a burn-in period of 1,000. To use ADVI,
+
+.. code-block:: python
+
+    advi = ADVI(dlnprob, kernel='meanfield')
+    phi, losses = advi.sample(n_iter=2000, stepsize=0.01, optimizer='adam')
+
+This runs ADVI for 2,000 iterations using the ``adam`` optimization algorithm. The vector ``phi`` contains the mean (first half) 
+and the logarithm of the standard deviation (second half) of the final Gaussian distribution.
 
 Examples
 ---------
@@ -90,7 +98,7 @@ Examples
 - For a complete 2D travel time tomography example, please see the example in ``tests/tomo2d``.
 - For an example implementation of 3D Full-waveform inversion, please see the example in ``tests/fwi3d``. Note
   that this requires users to provide an external 3D FWI code to calculate misfit values and gradients. See details
-  in ``vfwi/fwi``.
+  in ``VIP/fwi``.
 
 References
 ----------
