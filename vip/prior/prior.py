@@ -1,5 +1,5 @@
 import numpy as np
-from vfwi.prior.transform import trans, trans_grad
+from vip.prior.transform import trans, trans_grad
 
 class prior():
     '''

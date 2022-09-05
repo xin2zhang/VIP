@@ -1,5 +1,5 @@
 import numpy as np
-from vfwi.kernel.pytrans import *
+from vip.kernel.pytrans import *
 
 def trans(x, batchsize=None, trans=1, lb=0, ub=1e8):
     '''

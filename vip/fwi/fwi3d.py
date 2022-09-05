@@ -1,6 +1,6 @@
 import numpy as np
 import time
-from vfwi.fwi.dask_fwi import run_fwi
+from vip.fwi.dask_fwi import run_fwi
 
 class fwi3d():
     '''

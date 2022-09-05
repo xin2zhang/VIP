@@ -1,5 +1,5 @@
 import numpy as np
-from vfwi.pyvi.optimizer import optimizer as optm
+from vip.pyvi.optimizer import optimizer as optm
 
 class ADVI():
     '''

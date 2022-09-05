@@ -1,5 +1,5 @@
 import numpy as np
-from vip.kernel.pykernel import *
+from vfwi.kernel.pykernel import *
 import vip.pyvi.optimizer as optm
 import h5py
 import os.path

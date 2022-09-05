@@ -1,5 +1,5 @@
 import numpy as np
-from vfwi.fwi2d.aco2d import fwi
+from vip.fwi2d.aco2d import fwi
 
 def prepare_config(config):
 
