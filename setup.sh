@@ -1,7 +1,7 @@
 #! /bin/bash
 
 echo "Build kernels for svgd..."
-cd vfwi/kernel
+cd vip/kernel
 RESULT="$(python setup.py build_ext -i 2>&1)" #2>/dev/null
 status=$?
 if [ $status -eq 0 ]; then
@@ -32,6 +32,6 @@ fi
 cd ../../
 
 if [ "$1" = "install" ]; then
-    echo "Install vfwi..."
+    echo "Install vip..."
     pip install -e .
 fi

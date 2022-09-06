@@ -1,5 +1,5 @@
 import numpy as np
-from vfwi.kernel.pykernel import *
+from vip.kernel.pykernel import *
 import vip.pyvi.optimizer as optm
 import h5py
 import os.path
@@ -101,7 +101,7 @@ class SVGD():
     def __dsample(self, theta, n_iter=100, stepsize=1e-2, gamma=1.0, decay_step=1, alpha=0.9, chunks=None):
 
         # initialise some variables
-        losses = np.zeros((n_iter,))
+        losses = np.zeros((n_iter,theta.shape[0]))
         prev_grad = np.zeros(theta.shape,dtype=np.float64)
         prev_theta = np.zeros(theta.shape,dtype=np.float64)
         mkernel = np.full((theta.shape[1],),fill_value=1.0, dtype=np.float64)
@@ -121,8 +121,8 @@ class SVGD():
             moment[mask] = 0
             moment = alpha*moment + stepsize*grad
             theta += moment
-            losses[i] = loss
-            print('Average loss: '+str(loss))
+            losses[i,:] = loss
+            print('Average loss: '+str(np.mean(loss)))
 
             # decay the stepsize if required
             if((i+1)%decay_step == 0):
@@ -146,7 +146,7 @@ class SVGD():
             burn_in, thin: not used, just for consistent arguments
             chunks: chunks of theta for calculation, default theta.shape
         Return
-            losses: mean loss value for each iterations, vector of length n
+            losses: loss value for each particle at each iteration, shape(n_iter, n)
             The final particles are stored at the hdf5 file specified by self.out, so no return samples
         '''
 
@@ -156,10 +156,11 @@ class SVGD():
         if(chunks is None):
             chunks = x0.shape
 
-        pre_loss = []
+        pre_loss = np.empty(shape=(pre_update,x0.shape[0]))
+        theta = x0
         if(pre_update>0):
             op = optm.optimizer(x0.shape, self.grad, method='sgd', alpha=alpha)
-            theta, pre_loss = op.optim(x0, n_iter=pre_update, stepsize=pre_step)
+            theta, pre_loss = op.optim(theta, n_iter=pre_update, stepsize=pre_step)
 
         if(self.kernel=='rbf'):
             op = optm.optimizer(x0.shape, self.grad, method=optimizer, alpha=alpha, beta=beta)
@@ -236,7 +237,7 @@ class sSVGD():
         if(self.mask is not None):
             update_step[:,self.mask] = 0
 
-        return update_step, np.mean(loss), pgrad
+        return update_step, loss, pgrad
 
     def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, pre_update=0, pre_step=1e-3,
                burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
@@ -265,7 +266,7 @@ class sSVGD():
             chunks = x0.shape
 
         theta = np.copy(x0).astype(np.float64)
-        losses = np.zeros((n_iter+pre_update,))
+        losses = np.zeros((n_iter+pre_update,x0.shape[0]))
 
         # create a hdf5 file to store samples on disk
         nsamples = int((n_iter-burn_in)/thin)
@@ -295,8 +296,8 @@ class sSVGD():
             prev_theta = np.copy(theta)
 
             theta = theta + update_step
-            losses[i] = loss
-            print('Average loss: '+str(loss))
+            losses[i,:] = loss
+            print('Average loss: '+str(np.mean(loss)))
 
         # real sampling
         for i in range(n_iter):
@@ -309,8 +310,8 @@ class sSVGD():
             prev_theta = np.copy(theta)
 
             theta = theta + update_step
-            losses[i+pre_update] = loss
-            print('Average loss: '+str(loss))
+            losses[i+pre_update,:] = loss
+            print('Average loss: '+str(np.mean(loss)))
 
             # decay the stepsize if required
             if((i+1)%decay_step == 0):

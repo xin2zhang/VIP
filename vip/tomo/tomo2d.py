@@ -1,6 +1,6 @@
 import numpy as np
 import time
-from vfwi.tomo.run_tomo import run_tomo
+from vip.tomo.run_tomo import run_tomo
 
 class tomo2d():
     '''

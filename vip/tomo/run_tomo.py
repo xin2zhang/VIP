@@ -1,5 +1,5 @@
 import numpy as np
-from vfwi.tomo.pyfm2d import fm2d_lglike
+from vip.tomo.pyfm2d import fm2d_lglike
 
 def run_tomo(vel, data, src, rec, config, client=None):
     '''
@@ -12,33 +12,33 @@ def run_tomo(vel, data, src, rec, config, client=None):
         client: a dask client, not used here
     '''
 
-   ns = src.shape[0]
-   nr = rec.shape[0]
-   status = np.zeros((2,ns*nr),dtype=np.int32)
-   w = data > 0
-   status[0,w] = 1
-   status[1,:] = np.linspace(1,ns*nr,ns*nr)
-   srcx = np.ascontiguousarray(src[:,0])
-   srcy = np.ascontiguousarray(src[:,1])
-   recx = np.ascontiguousarray(rec[:,0])
-   recy = np.ascontiguousarray(rec[:,1])
+    ns = src.shape[0]
+    nr = rec.shape[0]
+    status = np.zeros((2,ns*nr),dtype=np.int32)
+    w = data > 0
+    status[0,w] = 1
+    status[1,:] = np.linspace(1,ns*nr,ns*nr)
+    srcx = np.ascontiguousarray(src[:,0])
+    srcy = np.ascontiguousarray(src[:,1])
+    recx = np.ascontiguousarray(rec[:,0])
+    recy = np.ascontiguousarray(rec[:,1])
 
-   nx = config.getint('tomo','nx')
-   ny = config.getint('tomo','ny')
-   xmin = config.getfloat('tomo','xmin')
-   ymin = config.getfloat('tomo','ymin')
-   dx = config.getfloat('tomo','dx')
-   dy = config.getfloat('tomo','dy')
-   gdx = config.getint('tomo','gdx')
-   gdy = config.getint('tomo','gdy')
-   sdx = config.getint('tomo','sdx')
-   sext = config.getint('tomo','sext')
+    nx = config.getint('tomo','nx')
+    ny = config.getint('tomo','ny')
+    xmin = config.getfloat('tomo','xmin')
+    ymin = config.getfloat('tomo','ymin')
+    dx = config.getfloat('tomo','dx')
+    dy = config.getfloat('tomo','dy')
+    gdx = config.getint('tomo','gdx')
+    gdy = config.getint('tomo','gdy')
+    sdx = config.getint('tomo','sdx')
+    sext = config.getint('tomo','sext')
 
-   res, grads = fm2d_lglike(vel, srcx, srcy, recx, recy,
-                            status, nx, ny, xmin, ymin,
-                            dx, dy, gdx, gdy, sdx, sext,
-                            data)
+    res, grads = fm2d_lglike(vel, srcx, srcy, recx, recy,
+                             status, nx, ny, xmin, ymin,
+                             dx, dy, gdx, gdy, sdx, sext,
+                             data)
 
-   return res, grads
+    return res, grads
 
 
