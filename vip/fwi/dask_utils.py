@@ -23,7 +23,8 @@ def dask_local(nworkers, ph=1, odask='./dask/'):
     return cluster, client
 
 # submit a dask job
-def dask_init(pe, nnodes, nworkers=1, ph=1, odask='./dask/'):
+def dask_init(pe, nnodes, nworkers=1, ph=1, 
+        cores_per_node=36, memory_per_node='500 GiB', odask='./dask/'):
     '''
     Initialise a dask cluster using SGE queue system
     Input
@@ -37,15 +38,8 @@ def dask_init(pe, nnodes, nworkers=1, ph=1, odask='./dask/'):
     '''
     os.chdir(odask)
 
-    if pe == 'skylake' or pe == 'skylake-misc':
-        cores_per_node = nnodes*36
-        memory_per_node = '280 GiB'
-    elif pe == 'cascadelake' or pe == 'cascadelake-misc':
-        cores_per_node = nnodes*96
-        memory_per_node = '500 GiB'
-    else:
-        cores_per_node = nnodes*24
-        memory_per_node = '500 GiB'
+    # change for sepcific hpc facility
+    num_of_cores = nnodes * cores_per_node
     runtime_limit = '800:00:00'
     project_name = 'attributes'
 
@@ -53,7 +47,7 @@ def dask_init(pe, nnodes, nworkers=1, ph=1, odask='./dask/'):
         processes = ph, # number of workers per job
         cores = ph, # make sure nthreads == 1, each dask worker forks one thread
         scheduler_options={"dashboard_address":":0"},
-        job_extra = ['-pe {} {}'.format(pe, cores_per_node), '-cwd', '-j y', '-V'],
+        job_extra = ['-pe {} {}'.format(pe, num_of_cores), '-cwd', '-j y', '-V'],
         memory = memory_per_node,
         project = project_name,
         walltime = runtime_limit

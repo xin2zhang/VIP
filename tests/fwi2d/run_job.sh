@@ -1,1 +1,1 @@
-PYTHONPATH=/otherdata/zhxls7/variational/VIP/vip/ python vfwi2d.py -r 0
+PYTHONPATH=/home/xzhang/VIP python vfwi2d.py -r 0

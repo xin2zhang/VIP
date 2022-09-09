@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
 import matplotlib.pyplot as plt
-import PyDDS.dds_io as io
 import os
 import h5py
 import scipy.sparse as sparse
@@ -24,7 +23,6 @@ from pathlib import Path
 
 def init_vfwi(config):
     Path(config.get('FWI','inpath')).mkdir(parents=True, exist_ok=True)
-    Path(config.get('FWI','print_path')).mkdir(parents=True, exist_ok=True)
     Path(config.get('FWI','outpath')).mkdir(parents=True, exist_ok=True)
     Path(config.get('svgd','outpath')).mkdir(parents=True, exist_ok=True)
     Path(config.get('dask','daskpath')).mkdir(parents=True, exist_ok=True)
@@ -32,9 +30,7 @@ def init_vfwi(config):
 def generate_init(n=1, lb=0, ub=1e8, transform=True):
     eps = np.finfo(np.float).eps
     ny = lb.shape[0]; nx = lb.shape[1]; nz = lb.shape[2]
-    true = io.fromfile('/lustre03/other/EIP/variational/FWI/overthrust/data/overthrust_d50m.asp')['Samples']
     x = lb + (ub-lb)*np.random.uniform(low=eps,high=1-eps,size=(n,ny,nx,nz))
-    x[:,:,:,0] = np.broadcast_to(true[:,:,0][None,:,:],(n,ny,nx))
     x = x.reshape((-1,ny*nx*nz))
     if(transform):
         x = trans(x,lb=lb.flatten(),ub=ub.flatten(),trans=1)
@@ -54,7 +50,6 @@ def get_init(config, resume=0):
                            transform=config.getboolean('svgd','transform'))
     else:
         print("Resume from previous running..")
-        #x0 = np.load(os.path.join(config['svgd']['outpath'],'last_sample.npy')).astype(np.float64)
         f = h5py.File(os.path.join(config['svgd']['outpath'],'samples.hdf5'),'r')
         x0 = f['samples'][-1,:,:]
         x0 = x0.astype(np.float64)
