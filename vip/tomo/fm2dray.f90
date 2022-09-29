@@ -1306,10 +1306,10 @@ DO i=1,nrc
 !        in more than one, then we need to divide the problem
 !        into separate parts (up to three).
 !
-         ivx=floor((ipx-1)/gdx)+1
-         ivz=floor((ipz-1)/gdz)+1
-         ivxo=floor((ipxo-1)/gdx)+1
-         ivzo=floor((ipzo-1)/gdz)+1
+         ivx=int((ipx-1)/gdx)+1
+         ivz=int((ipz-1)/gdz)+1
+         ivxo=int((ipxo-1)/gdx)+1
+         ivzo=int((ipzo-1)/gdz)+1
 !
 !        Calculate up to two hit points between straight
 !        ray segment and cell faces.
