@@ -1,5 +1,5 @@
 # List of source file
-OBJ = fm2d_globalp.o fm2d_ttime.o fm2dray_cartesian.o fm2d_wrapper.o 
+OBJ = fm2d_globalp.o fm2d_ttime.o fm2dray.o fm2d_wrapper.o 
 F90 = gfortran
 LIKE2D_LIB = libfmm2d.a
 AR = ar -r
