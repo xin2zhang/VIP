@@ -13,7 +13,7 @@ system(make_comp)
 ext_modules = [Extension("pyfm2d", ["pyfm2d.pyx"],
                          include_dirs = [npy_include_dir],
                          libraries=["gfortran","gomp"],
-                         extra_objects=["fm2d_globalp.o", "fm2d_ttime.o", "fm2dray_cartesian.o","fm2d_wrapper.o"])]
+                         extra_objects=["fm2d_globalp.o", "fm2d_ttime.o", "fm2dray.o","fm2d_wrapper.o"])]
 
 setup(name = 'fast marching',
       cmdclass = {'build_ext': build_ext},
