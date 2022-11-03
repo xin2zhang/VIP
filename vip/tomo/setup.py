@@ -8,6 +8,7 @@ npy_include_dir = numpy.get_include()
 # compile fortran code
 make_comp = 'make'
 print(make_comp)
+system('make cleanall')
 system(make_comp)
 
 ext_modules = [Extension("pyfm2d", ["pyfm2d.pyx"],
