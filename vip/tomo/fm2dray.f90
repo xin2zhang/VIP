@@ -1199,7 +1199,7 @@ DO i=1,nrc
       sred=SQRT(sred)
       sw=0      
       IF(sred.LT.2.0*dpl)THEN
-      	 rgx(j+2)=scx
+      	  rgx(j+2)=scx
           rgz(j+2)=scz
           nrp=j+2
           sw=1
@@ -1239,7 +1239,7 @@ DO i=1,nrc
 !     box boundaries
 !
       IF(ipx.LT.1)THEN
-      	rgx(j+1)=gox
+      	 rgx(j+1)=gox
          ipx=1
          rbint=1
       ENDIF
@@ -1306,10 +1306,10 @@ DO i=1,nrc
 !        in more than one, then we need to divide the problem
 !        into separate parts (up to three).
 !
-         ivx=INT((ipx-1)/gdx)+1
-         ivz=INT((ipz-1)/gdz)+1
-         ivxo=INT((ipxo-1)/gdx)+1
-         ivzo=INT((ipzo-1)/gdz)+1
+         ivx=int((ipx-1)/gdx)+1
+         ivz=int((ipz-1)/gdz)+1
+         ivxo=int((ipxo-1)/gdx)+1
+         ivzo=int((ipzo-1)/gdz)+1
 !
 !        Calculate up to two hit points between straight
 !        ray segment and cell faces.
