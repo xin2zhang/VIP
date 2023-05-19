@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 echo "Build kernels for svgd..."
 cd vip/kernel
@@ -19,6 +19,7 @@ if [ $status -eq 0 ]; then
 else
     echo "Error: $RESULT"
 fi
+
 echo "Build 2d tomography..."
 cd ../tomo
 RESULT="$(python setup.py build_ext -i 2>&1)"

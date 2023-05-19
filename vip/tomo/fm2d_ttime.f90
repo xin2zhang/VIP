@@ -120,6 +120,7 @@ ELSE
    DO i=1,2
       DO j=1,2
          ds=SQRT((dsx-(i-1)*dnx)**2+(dsz-(j-1)*dnz)**2)
+         if(earth>0) ds=SQRT(((dsx-(i-1)*dnx)*earth)**2+((dsz-(j-1)*dnz)*earth*sin(scx))**2)
          ttn(isz-1+j,isx-1+i)=2.0*ds/(vss(i,j)+vsrc)
          CALL addtree(isz-1+j,isx-1+i)
       ENDDO

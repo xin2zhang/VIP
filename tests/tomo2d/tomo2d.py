@@ -11,7 +11,7 @@ from vip.pyvi.svgd import SVGD, sSVGD
 from datetime import datetime
 import time
 import configparser
-import vip.fwi.dask_utils as du
+#import vip.fwi.dask_utils as du
 from vip.prior.prior import prior
 from vip.prior.pdf import Uniform, Gaussian
 
@@ -41,10 +41,18 @@ def get_init(config, resume=0):
 
     else:
         print("Resume from previous running..")
-        f = h5py.File(os.path.join(config['svgd']['outpath'],'samples.hdf5'),'r')
-        x0 = f['samples'][-1,:,:]
+        #f = h5py.File(os.path.join(config['svgd']['outpath'],'samples.hdf5'),'r')
+        #x0 = f['samples'][-1,:,:]
+        #x0 = x0.astype(np.float64)
+        #f.close()
+        x0 = np.load('last_sample.npy')
+        w = np.where(x0<=lower_bnd)
+        for i in range(len(w[0])):
+            x0[w[0][i],w[1][i]] = np.mean(x0[:,w[1][i]])
+        w = np.where(x0>=upper_bnd)
+        for i in range(len(w[0])):
+            x0[w[0][i],w[1][i]] = np.mean(x0[:,w[1][i]])
         x0 = x0.astype(np.float64)
-        f.close()
         if( config.getboolean('svgd','transform') ):
             x0 = trans(x0,lb=lower_bnd.flatten(),ub=upper_bnd.flatten(),trans=1)
 

@@ -39,15 +39,15 @@ class tomo2d():
         loss, grad = run_tomo(theta, self.data, self.src, self.rec, self.config, client=self.client)
         # update grad
         grad[:,self.mask] = 0
-        g = 1./self.sigma**2
-        grad *= g
+        #g = 1./self.sigma**2
+        #grad *= g
         # clip the grad to avoid numerical instability
         #clip = self.config.getfloat('FWI','gclipmax')
         #grad[grad>=clip] = clip
         #grad[grad<=-clip] = -clip
 
         # log likelihood
-        return 0.5*loss/self.sigma**2, grad
+        return loss, grad
 
     def dlnprob(self, theta):
         '''

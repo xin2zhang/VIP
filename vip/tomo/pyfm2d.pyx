@@ -60,7 +60,7 @@ def fm2d_lglike(np.ndarray[double, ndim=2, mode="c"] vel not None, np.ndarray[do
         np.ndarray[double, ndim=1, mode="c"] recx not None, np.ndarray[double, ndim=1, mode="c"] recy not None,
         np.ndarray[int, ndim=2, mode="c"] mask not None, int nx, int ny, double xmin, double ymin, double dx, 
         double dy, int gdx, int gdy, int sdx, int sext, 
-        np.ndarray[double, ndim=1, mode="c"] tobs not None, double earth=0):
+        np.ndarray[double, ndim=2, mode="c"] tobs not None, double earth=0):
     cdef int nsrc, nrec, nv
     nsrc = srcx.shape[0]
     nrec = recx.shape[0]
@@ -74,6 +74,6 @@ def fm2d_lglike(np.ndarray[double, ndim=2, mode="c"] vel not None, np.ndarray[do
     cdef np.ndarray[double,ndim=2, mode="c"] grads = np.empty((nv,nx*ny),dtype=np.float64)
     c_fm2d_lglike(&nsrc, &srcx[0], &srcy[0], &nrec, &recx[0], &recy[0], &nx, &ny, &mask[0,0],
           &xmin, &ymin, &dx, &dy, &gdx, &gdy, &sdx, &sext, &nv, 
-          &vel[0,0], &tobs[0], &res[0], &grads[0,0], &earth)
+          &vel[0,0], &tobs[0,0], &res[0], &grads[0,0], &earth)
     
     return res, grads

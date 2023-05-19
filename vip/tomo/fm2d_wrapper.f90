@@ -130,7 +130,7 @@ contains
         integer(c_int), intent(in) :: sdx, sext
         integer(c_int), intent(in) :: nv
         real(kind=c_double), intent(in) :: vel(ny,nx,nv)
-        real(kind=c_double), intent(in) :: tobs(nrec*nsrc)
+        real(kind=c_double), intent(in) :: tobs(2,nrec*nsrc)
         real(kind=c_double), intent(out) :: lglike(nv)
         real(kind=c_double), intent(out) :: grads(ny*nx,nv)
         real(kind=c_double), intent(in) :: earth
@@ -152,9 +152,9 @@ contains
                 time,dtdv,earth)
             time1d = reshape(time,(/nrec*nsrc/))
             dtdv2d = reshape(dtdv,(/ny*nx,nrec*nsrc/))
-            lglike(i) = sum((tobs-time1d)**2)
+            lglike(i) = 0.5*sum((tobs(1,:)-time1d)**2/tobs(2,:)**2)
             do j = 1, nrec*nsrc
-                grads(:,i) = grads(:,i) + dtdv2d(:,j)*(tobs(j)-time1d(j))
+                grads(:,i) = grads(:,i) + dtdv2d(:,j)*(tobs(1,j)-time1d(j))/tobs(2,j)**2
             enddo
         enddo
         !$omp end do
