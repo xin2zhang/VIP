@@ -1,4 +1,5 @@
 import os
+import dask
 from dask_jobqueue import SGECluster
 from dask.distributed import Client, LocalCluster
 import time
@@ -15,7 +16,9 @@ def dask_local(nworkers, ph=1, odask='./dask/'):
     Return
         dask cluster and client
     '''
-    os.chdir(odask)
+    if not os.path.exists(odask):
+        os.makedir(odask)
+    dask.config.set(temporary_directory=odask)
 
     cluster = LocalCluster(n_workers=nworkers, threads_per_worker=ph)
     client = Client(cluster)
@@ -23,7 +26,7 @@ def dask_local(nworkers, ph=1, odask='./dask/'):
     return cluster, client
 
 # submit a dask job
-def dask_init(pe, nnodes, nworkers=1, ph=1, 
+def dask_init(pe, nnodes, nworkers=1, ph=1,
         cores_per_node=36, memory_per_node='500 GiB', odask='./dask/'):
     '''
     Initialise a dask cluster using SGE queue system
@@ -37,6 +40,7 @@ def dask_init(pe, nnodes, nworkers=1, ph=1,
         dask cluster and client
     '''
     os.chdir(odask)
+    dask.config.set(temporary_directory=odask)
 
     # change for sepcific hpc facility
     num_of_cores = nnodes * cores_per_node
