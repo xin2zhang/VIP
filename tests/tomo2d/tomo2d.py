@@ -53,6 +53,7 @@ def get_init(config, resume=0):
         for i in range(len(w[0])):
             x0[w[0][i],w[1][i]] = np.mean(x0[:,w[1][i]])
         x0 = x0.astype(np.float64)
+
         if( config.getboolean('svgd','transform') ):
             x0 = trans(x0,lb=lower_bnd.flatten(),ub=upper_bnd.flatten(),trans=1)
 
@@ -104,22 +105,28 @@ def create_prior(config):
 
     return ppdf
 
-def write_samples(filename, pprior, start=0, chunk=10):
+def write_samples(filename, pprior, n=0, chunk=10):
 
     f = h5py.File(filename,'r+')
     samples = f['samples']
+    start = 0
+    if(n>0):
+        start = samples.shape[0] - n
+    if(start<0):
+        start = 0
     if(pprior.trans):
         for i in range(start,samples.shape[0]):
             samples[i,:,:] = pprior.adjust(samples[i,:,:])
 
     mean = np.mean(samples[:].reshape((-1,samples.shape[2])),axis=0)
     std = np.std(samples[:].reshape((-1,samples.shape[2])),axis=0)
+    last = samples[-1,:,:]
     f.close()
 
     np.save('mean.npy',mean)
     np.save('std.npy',std)
+    np.save('last_sample.npy',last)
     return 0
-
 
 if __name__=="__main__":
 
@@ -182,6 +189,7 @@ if __name__=="__main__":
     print('Time taken: '+str(end-start)+' s')
 
     # write out results
-    write_samples(os.path.join(config.get('svgd','outpath'),'samples.hdf5'), ppdf)
+    nsamples = int((config.getint('svgd','iter')-config.getint('svgd','burn_in'))/config.getint('svgd','thin'))
+    write_samples(os.path.join(config.get('svgd','outpath'),'samples.hdf5'), ppdf, n=nsamples)
     with open(os.path.join(config.get('svgd','outpath'),'misfits.txt'),"ab") as f:
         np.savetxt(f,losses)
