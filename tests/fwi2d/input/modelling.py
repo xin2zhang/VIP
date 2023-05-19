@@ -1,7 +1,7 @@
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
-import vip.fiw2d.aco2d as aco2d
+import vip.fwi2d.aco2d as aco2d
 
 true_model = np.loadtxt('marmousi_small.txt')
 nz = true_model.shape[0]; nx = true_model.shape[1]
@@ -15,3 +15,4 @@ rec = aco2d.forward(vel, dim = ns*nt*nr, verbose = 0, paramfile='./input_params.
 rec = rec + 0.1*np.random.normal(size=rec.shape).astype(np.float32)
 
 #np.save('waveforms.npy',rec)
+print('Modelling done.')
