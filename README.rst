@@ -2,7 +2,7 @@
 VIP
 ===============================
 
-Variational Imaging Package, which implents variational methods for geophysical imaging problems, including
+Variational Imaging Package, which implements variational methods for geophysical imaging problems, including
 seismic travel time tomography and full waveform inversion.
 
 Authors
@@ -43,7 +43,7 @@ in your scripts.
 
 Variational Inversion
 ---------------------
-This package implements three different variational inference methods: ``ADVI (mean field)``,
+This package implements three different variational inference methods: ``ADVI``,
 ``SVGD``, and ``stochastic SVGD (sSVGD)``. To use them,
 
 .. code-block:: python
@@ -90,8 +90,10 @@ This will sample the posterior using sSVGD method for 2,000 iterations with a bu
     advi = ADVI(dlnprob, kernel='meanfield')
     phi, losses = advi.sample(n_iter=2000, stepsize=0.01, optimizer='adam')
 
-This runs ADVI for 2,000 iterations using the ``adam`` optimization algorithm. The vector ``phi`` contains the mean (first half) 
-and the logarithm of the standard deviation (second half) of the final Gaussian distribution.
+This runs mean-field ADVI for 2,000 iterations using the ``adam`` optimization algorithm. The vector ``phi`` contains the mean (first half) 
+and the logarithm of the standard deviation (second half) of the final Gaussian distribution. To use fullrank ADVI, set kernel to "fullrank".
+In this case, assume the number of parameters is n, the first n elements of ``phi`` are the mean, and the rest n^2 elements are the Cholesky
+decomposition (L) of the covariance matrix.
 
 Examples
 ---------
@@ -105,4 +107,4 @@ References
 ----------
 - Zhang, X., & Curtis, A. (2020). Seismic tomography using variational inference methods. Journal of Geophysical Research: Solid Earth, 125(4), e2019JB018589.
 - Zhang, X., Nawaz, M. A., Zhao, X., & Curtis, A. (2021). An introduction to variational inference in geophysical inverse problems. In Advances in Geophysics (Vol. 62, pp. 73-140). Elsevier.
-- Zhang, X., & Curtis, A. (2020). Variational full-waveform inversion. Geophysical Journal International, 222(1), 406-411.
+- Zhang, X., Lomas, A., Zhou, M., Zheng, Y., & Curtis, A. (2022). 3D Bayesian Variational Full Waveform Inversion. arXiv e-prints, arXiv-2210.
