@@ -1,12 +1,12 @@
 import numpy as np
 import time
-from vip.fwi2d.run_fwi import run_fwi
+from forward.fwi.run_fwi import run_fwi
 
-class fwi2d():
+class fwi3d():
     '''
-    A class that implements an interface of an external 2D FWI code
+    A class that implements an interface of an external 3D FWI code
     '''
-    def __init__(self, config, prior, data, mask=None, client=None):
+    def __init__(self, config, prior, mask=None, client=None):
         '''
         config: a python configparser.ConfigParser()
         prior: a prior class, see prior/prior.py
@@ -18,13 +18,13 @@ class fwi2d():
         self.sigma = config.getfloat('svgd','sigma')
         self.client = client
         self.prior = prior
-        self.data = data
 
         # create mask matrix for model parameters that are fixed
-        nz = config.getint('FWI','nz')
-        nx = config.getint('FWI','nx')
+        nx = config.getint('svgd','nx')
+        ny = config.getint('svgd','ny')
+        nz = config.getint('svgd','nz')
         if(mask is None):
-            mask = np.full((nx*nz),False)
+            mask = np.full((ny*nx*nz),False)
         self.mask = mask
 
     def fwi_gradient(self, theta):
@@ -34,15 +34,16 @@ class fwi2d():
         '''
 
         # call fwi function, get loss and grad
-        loss, grad = run_fwi(theta, self.data, self.config, client=self.client)
+        loss, grad = run_fwi(theta, self.config, client=self.client)
         # update grad
         grad[:,self.mask] = 0
-        g = 1./self.sigma**2
+        g = -1./(theta**3*self.sigma**2)
         grad *= g
         # clip the grad to avoid numerical instability
-        #clip = self.config.getfloat('FWI','gclipmax')
-        #grad[grad>=clip] = clip
-        #grad[grad<=-clip] = -clip
+        clip = self.config.getfloat('FWI','gclipmax')
+        #clip = clip * np.quantile(np.abs(grad),0.999)
+        grad[grad>=clip] = clip
+        grad[grad<=-clip] = -clip
 
         # log likelihood
         return 0.5*loss/self.sigma**2, grad
@@ -61,9 +62,9 @@ class fwi2d():
         # adjust theta such that it is within prior or transformed back to original space
         theta = self.prior.adjust(theta)
 
-        #t = time.time()
+        t = time.time()
         lglike, grad = self.fwi_gradient(theta)
-        #print('Simulation takes '+str(time.time()-t))
+        print('Simulation takes '+str(time.time()-t))
 
         # compute gradient including the prior
         grad, mask = self.prior.grad(theta, grad=grad)

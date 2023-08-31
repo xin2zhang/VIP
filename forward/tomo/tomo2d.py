@@ -1,52 +1,53 @@
 import numpy as np
 import time
-from vip.fwi.run_fwi import run_fwi
+from forward.tomo.run_tomo import run_tomo
 
-class fwi3d():
+class tomo2d():
     '''
-    A class that implements an interface of an external 3D FWI code
+    A class that implements an interface of an external 2d travel time tomography code
     '''
     def __init__(self, config, prior, mask=None, client=None):
         '''
         config: a python configparser.ConfigParser()
         prior: a prior class, see prior/prior.py
         mask: a mask array where the parameters will be fixed, default no mask
-        client: a dask client to submit fwi running, must be specified
+        client: a dask client to submit tomography running, not used here
         '''
 
         self.config = config
         self.sigma = config.getfloat('svgd','sigma')
         self.client = client
         self.prior = prior
+        self.data = np.loadtxt(config.get('tomo','datafile'), dtype=np.float64)
+        self.src = np.loadtxt(config.get('tomo','srcfile'), dtype=np.float64)
+        self.rec = np.loadtxt(config.get('tomo','recfile'), dtype=np.float64)
 
         # create mask matrix for model parameters that are fixed
-        nx = config.getint('svgd','nx')
-        ny = config.getint('svgd','ny')
-        nz = config.getint('svgd','nz')
+        ny = config.getint('tomo','ny')
+        nx = config.getint('tomo','nx')
         if(mask is None):
-            mask = np.full((ny*nx*nz),False)
+            mask = np.full((nx*ny),False)
         self.mask = mask
 
-    def fwi_gradient(self, theta):
+    def gradient(self, theta):
         '''
-        Call external FWI code to get misfit value and gradient
-        Note that run_fwi needs to be implemented for specific FWI code
+        Call external tomography code to get misfit value and gradient
+        Note that run_tomo needs to be implemented for specific tomography code
         '''
 
         # call fwi function, get loss and grad
-        loss, grad = run_fwi(theta, self.config, client=self.client)
+        loss, grad = run_tomo(theta, self.data, self.src, self.rec, self.config, client=self.client)
         # update grad
         grad[:,self.mask] = 0
-        g = -1./(theta**3*self.sigma**2)
-        grad *= g
+        #g = 1./self.sigma**2
+        #grad *= g
         # clip the grad to avoid numerical instability
-        clip = self.config.getfloat('FWI','gclipmax')
-        #clip = clip * np.quantile(np.abs(grad),0.999)
-        grad[grad>=clip] = clip
-        grad[grad<=-clip] = -clip
+        #clip = self.config.getfloat('FWI','gclipmax')
+        #grad[grad>=clip] = clip
+        #grad[grad<=-clip] = -clip
 
         # log likelihood
-        return 0.5*loss/self.sigma**2, grad
+        return loss, grad
 
     def dlnprob(self, theta):
         '''
@@ -62,9 +63,9 @@ class fwi3d():
         # adjust theta such that it is within prior or transformed back to original space
         theta = self.prior.adjust(theta)
 
-        t = time.time()
-        lglike, grad = self.fwi_gradient(theta)
-        print('Simulation takes '+str(time.time()-t))
+        #t = time.time()
+        lglike, grad = self.gradient(theta)
+        #print('Simulation takes '+str(time.time()-t))
 
         # compute gradient including the prior
         grad, mask = self.prior.grad(theta, grad=grad)
