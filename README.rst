@@ -2,7 +2,7 @@
 VIP
 ===============================
 
-Variational Imaging Package, which implements variational methods for geophysical imaging problems, including
+Variational Inversion Package, which implements variational methods for geophysical imaging problems, including
 seismic travel time tomography and full waveform inversion.
 
 Authors
@@ -107,4 +107,4 @@ References
 ----------
 - Zhang, X., & Curtis, A. (2020). Seismic tomography using variational inference methods. Journal of Geophysical Research: Solid Earth, 125(4), e2019JB018589.
 - Zhang, X., Nawaz, M. A., Zhao, X., & Curtis, A. (2021). An introduction to variational inference in geophysical inverse problems. In Advances in Geophysics (Vol. 62, pp. 73-140). Elsevier.
-- Zhang, X., Lomas, A., Zhou, M., Zheng, Y., & Curtis, A. (2022). 3D Bayesian Variational Full Waveform Inversion. arXiv e-prints, arXiv-2210.
+- Zhang, X., Lomas, A., Zhou, M., Zheng, Y., & Curtis, A. (2023). 3-D Bayesian variational full waveform inversion. Geophysical Journal International, 234(1), 546-561.
