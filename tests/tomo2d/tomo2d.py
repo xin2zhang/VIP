@@ -5,7 +5,7 @@ import os
 import h5py
 
 from vip.prior.transform import trans
-from vip.tomo.tomo2d import tomo2d
+from forward.tomo.tomo2d import tomo2d
 from vip.pyvi.svgd import SVGD, sSVGD
 
 from datetime import datetime
@@ -18,6 +18,8 @@ from vip.prior.pdf import Uniform, Gaussian
 import argparse
 import sys
 from pathlib import Path
+
+os.environ['HDF5_USE_FILE_LOCKING']='FALSE'
 
 def init_tomo(config):
     Path(config.get('svgd','outpath')).mkdir(parents=True, exist_ok=True)

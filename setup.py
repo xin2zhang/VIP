@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-setup(name='vfwi',
-      description='Variational Imaging Package',
+setup(name='vip',
+      description='Variational Inversion Package',
       packages=find_packages(),
       )

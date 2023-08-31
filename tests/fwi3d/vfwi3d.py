@@ -6,14 +6,14 @@ import h5py
 import scipy.sparse as sparse
 
 from vip.prior.transform import trans
-from vip.fwi.fwi3d import *
+from forward.fwi.fwi3d import *
 from vip.pyvi.svgd import SVGD, sSVGD
 
 from datetime import datetime
 import time
 from scipy.ndimage import gaussian_filter
 import configparser
-import vip.fwi.dask_utils as du
+import forward.fwi.dask_utils as du
 from vip.prior.prior import prior
 from vip.prior.pdf import Uniform, Gaussian
 

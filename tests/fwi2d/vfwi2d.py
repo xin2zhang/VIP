@@ -5,19 +5,21 @@ import os
 import h5py
 
 from vip.prior.transform import trans
-from vip.fwi2d.fwi2d import fwi2d
+from forward.fwi2d.fwi2d import fwi2d
 from vip.pyvi.svgd import SVGD, sSVGD
 
 from datetime import datetime
 import time
 import configparser
-import vip.fwi.dask_utils as du
+import forward.fwi.dask_utils as du
 from vip.prior.prior import prior
 from vip.prior.pdf import Uniform, Gaussian
 
 import argparse
 import sys
 from pathlib import Path
+
+os.environ['HDF5_USE_FILE_LOCKING']='FALSE'
 
 def init_vfwi(config):
     Path(config.get('svgd','outpath')).mkdir(parents=True, exist_ok=True)

@@ -11,7 +11,7 @@ else
 fi
 
 echo "Build 2d fwi..."
-cd ../fwi2d
+cd ../../forward/fwi2d
 RESULT="$(python setup.py build_ext -i 2>&1)"
 status=$?
 if [ $status -eq 0 ]; then

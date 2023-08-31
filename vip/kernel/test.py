@@ -1,7 +1,7 @@
 import numpy as np
 import pytrans
 
-ns = 200
+ns = 20
 n = 401*401*181
 
 x = np.random.rand(ns,n)
