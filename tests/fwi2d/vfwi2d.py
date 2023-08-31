@@ -125,7 +125,7 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Variational Full-waveform Inversion')
     parser.add_argument("-c", "--config", metavar='config', default='config.ini', help="Configuration file")
-    parser.add_argument("-r", "--resume", metavar='resume', default=0, type=float, help="Resume mode (1) or start a new run(0)")
+    parser.add_argument("-r", "--resume", metavar='resume', default=0, type=int, help="Resume mode (1) or start a new run(0)")
 
     args = parser.parse_args()
     configfile = args.config
@@ -148,7 +148,8 @@ if __name__=="__main__":
     daskpath = config.get('dask','daskpath')
     print(f'Create dask cluster at: {daskpath}')
     cluster, client = du.dask_local(config.getint('dask','nworkers'),
-                                   ph=config.getint('dask','ph'))
+                                   ph=config.getint('dask','ph'),
+                                   odask=daskpath)
     ppdf = create_prior(config)
 
     # fwi simulator
@@ -157,7 +158,7 @@ if __name__=="__main__":
     mask = np.full((nz,nx),False)
     mask[0:18,:] = True
     data = np.load(config.get('FWI','datafile'))
-    data = data.transpose(0,2,1).flatten()
+    #data = data.transpose(0,2,1).flatten()
     simulator = fwi2d(config, ppdf, data, mask=mask.flatten(), client=client)
 
     # svgd sampler
