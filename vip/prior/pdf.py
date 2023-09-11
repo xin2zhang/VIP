@@ -5,7 +5,27 @@ class pdf():
     Class pdf()
         A class implements probability density functions
     '''
-    def __init__():
+    def __init__(self,):
+        pass
+
+    def lnprob(self, theta):
+        '''
+        Compute log probability
+        Input
+            theta: the value of random variable
+        Return
+            lnprob: the log probability
+        '''
+        pass
+
+    def grad(self, theta):
+        '''
+        Compute gradient of log probability
+        Input
+            theta: the value of random variable
+        Return
+            lnprob: the gradient
+        '''
         pass
 
 class Uniform():
