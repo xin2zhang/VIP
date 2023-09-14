@@ -39,8 +39,6 @@ def forward(np.ndarray[double, ndim=1, mode="c"] vel not None,
         print('NaN occured in python')
         exit()
 
-    np.savetxt('test.txt',vel)
-
     cdef np.ndarray[float, ndim=1,mode="c"] vel_f = np.zeros(vel.shape[0], dtype=np.float32)
     vel_f = np.float32(vel)
 
