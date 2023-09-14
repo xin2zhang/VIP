@@ -18,8 +18,11 @@ from vip.prior.pdf import Uniform, Gaussian
 import argparse
 import sys
 from pathlib import Path
+import dask
 
 os.environ['HDF5_USE_FILE_LOCKING']='FALSE'
+os.environ['OMP_NUM_THREADS']='4'
+dask.config.set({'distributed.comm.timeouts.connect': '50s'})
 
 def init_vfwi(config):
     Path(config.get('svgd','outpath')).mkdir(parents=True, exist_ok=True)
