@@ -45,7 +45,6 @@ class ADVI():
         else:
             print('Not supported kernel')
 
-        grad = np.concatenate((gradu,gradw),axis=0)
 
         return loss, grad, None
 

@@ -101,7 +101,7 @@ Examples
 - For a complete 2D travel time tomography example, please see the example in ``tests/tomo2d``.
 - For an example implementation of 3D Full-waveform inversion, please see the example in ``tests/fwi3d``. Note
   that this requires users to provide an external 3D FWI code to calculate misfit values and gradients. See details
-  in ``vip/fwi``.
+  in ``vip/forward/fwi``.
 
 References
 ----------

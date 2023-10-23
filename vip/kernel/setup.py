@@ -17,7 +17,7 @@ extensions = [Extension("pykernel",
                         include_dirs=[np.get_include()],
                         libraries=["gfortran","gomp"],
                         extra_compile_args=['-O3'],
-                        extra_link_args=['-L/usr/lib64'],
+                        extra_link_args=['-L/usr/lib64','-lm'],
                         extra_objects=["utils.o","transform.o","kernel.o"]),
             Extension("pytrans",
                         ["pytrans.pyx"],
@@ -25,7 +25,7 @@ extensions = [Extension("pykernel",
                         include_dirs=[np.get_include()],
                         libraries=["gfortran","gomp"],
                         extra_compile_args=['-O3'],
-                        extra_link_args=['-L/usr/lib64'],
+                        extra_link_args=['-L/usr/lib64','-lm'],
                         extra_objects=["utils.o","transform.o","kernel.o"])
               ]
 
