@@ -5,8 +5,10 @@ fwi2d/__pycache__
 fwi2d/*.so
 fwi2d/pyacofwi2D.c
 fwi2d/*.a
-tomo/__pycache__
-tomo/*.so
-tomo/pyfm2d.c
-tomo/*.a
-fwi/__pycache__
+fwi2d/*.o
+tomo2d/__pycache__
+tomo2d/*.so
+tomo2d/pyfm2d.c
+tomo2d/*.a
+tomo2d/*.o
+fwi3d/__pycache__

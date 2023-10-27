@@ -1,5 +1,5 @@
 import numpy as np
-from forward.tomo.pyfm2d import fm2d_lglike
+from forward.tomo2d.pyfm2d import fm2d_lglike
 
 def run_tomo(vel, data, src, rec, config, client=None):
     '''

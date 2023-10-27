@@ -30,7 +30,7 @@ def init_vfwi(config):
 
 
 def generate_init(n=1,lb=0,ub=1e8, transform=True):
-    eps = np.finfo(np.float).eps
+    eps = np.finfo(np.float64).eps
     nz = lb.shape[0]; nx = lb.shape[1]
     x = lb + (ub-lb)*np.random.uniform(low=eps,high=1-eps,size=(n,nz,nx))
     x[:,0:18,:] = 1500
