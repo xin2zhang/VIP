@@ -162,4 +162,52 @@ contains
 
     end subroutine
 
+    subroutine c_many_fm2d(nsrc,srcx,srcy,nrec,recx,recy,nx,ny,&
+            xmin,ymin,dx,dy,gdx,gdy,sdx,sext,nv,vel,tobs,mask,lglike,grads,earth) bind(c)
+        integer(c_int), intent(in) :: nsrc
+        real(kind=c_double), intent(in) :: srcx(nsrc)
+        real(kind=c_double), intent(in) :: srcy(nsrc)
+        integer(c_int), intent(in) :: nrec
+        real(kind=c_double), intent(in) :: recx(nrec)
+        real(kind=c_double), intent(in) :: recy(nrec)
+        integer(c_int), intent(in) :: nx, ny
+        real(kind=c_double), intent(in) :: xmin, ymin
+        real(kind=c_double), intent(in) :: dx, dy
+        integer(c_int), intent(in) :: gdx, gdy
+        integer(c_int), intent(in) :: sdx, sext
+        integer(c_int), intent(in) :: nv
+        real(kind=c_double), intent(in) :: vel(ny,nx,nv)
+        real(kind=c_double), intent(in) :: tobs(2,nrec*nsrc,nv)
+        integer(c_int), intent(in) :: mask(2,nrec*nsrc,nv)
+        real(kind=c_double), intent(out) :: lglike(nv)
+        real(kind=c_double), intent(out) :: grads(ny*nx,nv)
+        real(kind=c_double), intent(in) :: earth
+
+        real(kind=c_double)  :: time(nrec,nsrc), time1d(nrec*nsrc)
+        real(kind=c_double), dimension(:,:,:,:), allocatable  :: dtdv
+        real(kind=c_double), dimension(:,:), allocatable  :: dtdv2d
+        integer i, j
+        
+        allocate(dtdv(ny,nx,nrec,nsrc))
+        allocate(dtdv2d(ny*nx,nrec*nsrc))
+        lglike = 0.
+        grads = 0
+        !$omp parallel
+        !$omp do private(time,time1d,dtdv,dtdv2d,i,j)
+        do i = 1, nv
+            call fm2d(nsrc,srcx,srcy,nrec,recx,recy,transpose(mask(:,:,i)),&
+                nx,ny,xmin,ymin,dx,dy,gdx,gdy,sdx,sext,vel(:,:,i),&
+                time,dtdv,earth)
+            time1d = reshape(time,(/nrec*nsrc/))
+            dtdv2d = reshape(dtdv,(/ny*nx,nrec*nsrc/))
+            lglike(i) = 0.5*sum((tobs(1,:,i)-time1d)**2/tobs(2,:,i)**2)
+            do j = 1, nrec*nsrc
+                grads(:,i) = grads(:,i) + dtdv2d(:,j)*(tobs(1,j,i)-time1d(j))/tobs(2,j,i)**2
+            enddo
+        enddo
+        !$omp end do
+        !$omp end parallel
+
+    end subroutine
+
 end module

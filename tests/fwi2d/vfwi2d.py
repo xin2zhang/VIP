@@ -11,7 +11,7 @@ from vip.pyvi.svgd import SVGD, sSVGD
 from datetime import datetime
 import time
 import configparser
-import forward.fwi.dask_utils as du
+import forward.fwi3d.dask_utils as du
 from vip.prior.prior import prior
 from vip.prior.pdf import Uniform, Gaussian
 
