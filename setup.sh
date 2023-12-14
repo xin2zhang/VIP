@@ -21,7 +21,7 @@ else
 fi
 
 echo "Build 2d tomography..."
-cd ../tomo
+cd ../tomo2d
 RESULT="$(python setup.py build_ext -i 2>&1)"
 status=$?
 if [ $status -eq 0 ]; then
