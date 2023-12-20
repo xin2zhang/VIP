@@ -70,6 +70,49 @@ class SVGD():
         self.threshold = threshold
         self.out = out
 
+    def sample(self, x0, optimizer='sgd', n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
+               alpha=0.9, beta=0.95, burn_in=None, thin=None, chunks=None):
+        '''
+        Using svgd to sample a probability density function
+        Input
+            x0: initial value, shape (n,dim)
+            optimizer: optimization method, including 'sgd', 'adam', default to 'sgd'
+            n_iter: number of iterations
+            stepsize: stepsize for each iteration
+            gamma: decaying rate for stepsize
+            decay_step: the number of steps to decay the stepsize
+            alpha, beta: hyperparameter for sgd and adam, for sgd only alpha is ued
+            burn_in, thin: not used, just for consistent arguments
+            chunks: chunks of theta for calculation, default theta.shape
+        Return
+            losses: loss value for each particle at each iteration, shape(n_iter, n)
+            The final particles are stored at the hdf5 file specified by self.out, so no return samples
+        '''
+
+        if(x0 is None):
+            raise ValueError('x0 cannot be None!')
+
+        if(chunks is None):
+            chunks = x0.shape
+
+        theta = x0
+
+        if(self.kernel=='rbf'):
+            op = optm.optimizer(x0.shape, self.grad, method=optimizer, alpha=alpha, beta=beta)
+            theta, losses = op.optim(theta, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step)
+
+        if(self.kernel=='diagonal'):
+            theta, losses = self.__dsample(theta, n_iter=n_iter, stepsize=stepsize, gamma=gamma,
+                                           decay_step=decay_step, alpha=alpha, chunks=chunks)
+
+        f = h5py.File(self.out,'w')
+        samples = f.create_dataset('samples',(1,x0.shape[0],x0.shape[1]),
+                                   compression="gzip", chunks=True)
+        samples[0,:,:] = np.copy(theta)
+        f.close()
+
+        return losses
+
     def grad(self, theta, mkernel=None, chunks=None):
         '''
         Compute gradients for svgd update
@@ -130,55 +173,6 @@ class SVGD():
 
         return theta, losses
 
-
-    def sample(self, x0, optimizer='sgd', n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
-               pre_update=0, pre_step=1e-3, alpha=0.9, beta=0.95, burn_in=None, thin=None, chunks=None):
-        '''
-        Using svgd to sample a probability density function
-        Input
-            x0: initial value, shape (n,dim)
-            optimizer: optimization method, including 'sgd', 'adam', default to 'sgd'
-            n_iter: number of iterations
-            stepsize: stepsize for each iteration
-            gamma: decaying rate for stepsize
-            decay_step: the number of steps to decay the stepsize
-            alpha, beta: hyperparameter for sgd and adam, for sgd only alpha is ued
-            burn_in, thin: not used, just for consistent arguments
-            chunks: chunks of theta for calculation, default theta.shape
-        Return
-            losses: loss value for each particle at each iteration, shape(n_iter, n)
-            The final particles are stored at the hdf5 file specified by self.out, so no return samples
-        '''
-
-        if(x0 is None):
-            raise ValueError('x0 cannot be None!')
-
-        if(chunks is None):
-            chunks = x0.shape
-
-        pre_loss = np.empty(shape=(pre_update,x0.shape[0]))
-        theta = x0
-        if(pre_update>0):
-            op = optm.optimizer(x0.shape, self.grad, method='sgd', alpha=alpha)
-            theta, pre_loss = op.optim(theta, n_iter=pre_update, stepsize=pre_step)
-
-        if(self.kernel=='rbf'):
-            op = optm.optimizer(x0.shape, self.grad, method=optimizer, alpha=alpha, beta=beta)
-            theta, losses = op.optim(theta, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step)
-
-        if(self.kernel=='diagonal'):
-            theta, losses = self.__dsample(theta, n_iter=n_iter, stepsize=stepsize, gamma=gamma,
-                                           decay_step=decay_step, alpha=alpha, chunks=chunks)
-
-        losses = np.concatenate((pre_loss,losses),axis=0)
-
-        f = h5py.File(self.out,'w')
-        samples = f.create_dataset('samples',(1,x0.shape[0],x0.shape[1]),
-                                   compression="gzip", chunks=True)
-        samples[0,:,:] = np.copy(x0)
-        f.close()
-
-        return losses
 
 class sSVGD():
     '''
