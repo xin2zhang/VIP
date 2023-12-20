@@ -106,7 +106,7 @@ class Gaussian():
             lnprob: the log probability
         '''
 
-        logp = -0.5*np.sum(((theta-self.mu)/self.sigma)**2) - np.sum(np.log(self.sigma)) - 0.5*theta.shape[0]*np.log(2*np.pi)
+        logp = -0.5*np.sum(((theta-self.mu)/self.sigma)**2) - np.sum(np.log(self.sigma)) - 0.5*self.mu.shape[0]*np.log(2*np.pi)
 
         return logp
 

@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import h5py
+import scipy.sparse as sparse
 
 from vip.prior.transform import trans
 from forward.tomo2d.tomo2d import tomo2d

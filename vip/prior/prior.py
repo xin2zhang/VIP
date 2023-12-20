@@ -14,7 +14,7 @@ class prior():
         transform: if True, transform from constrained variable to unconstrained variable
         lb, ub: if transform is True, specify the lower and upper boundary
         smooth: if True, adding smoothness constraint
-        L: the smooth matrix
+        L: smooth matrix which is a scipy sparse matrix
         '''
 
         self.pdf = pdf
@@ -24,11 +24,41 @@ class prior():
         self.smooth = smooth
         self.L = L
 
-    def trans():
+    def trans(self):
         return self.transform
 
-    def pdf():
+    def pdf(self):
         return self.pdf
+
+    def lnprob(self, x):
+        '''
+        Calculate log probability of x
+        Input
+            x: value of the random variable, shape (nparticles,nparameters)
+        Return
+            logp: the log probability
+        '''
+
+        logp = self.pdf.lnprob(x)
+
+        if(self.smooth):
+            logsp = self.logp_smooth(x)
+            logp = logp + logsp
+
+        return logp
+
+    def logp_smooth(self,x):
+        ''' return smooth log probability
+        Input
+            x: 2D array with dimension nparticles*nparameters
+        Return: log probability, shape (nparticles,)
+        '''
+        dx = self.L*x.T
+        self.L = self.L.eliminate_zeros()
+        elements = self.L.data
+        logsp = -0.5*np.sum(dx**2,axis=0) - np.sum(np.log(elements[elements>0])) - 0.5*self.L.shape[0]*np.log(2*np.pi)
+
+        return logsp
 
     def grad_matrix(self, x, grad):
         ''' return gradient of smooth prior
@@ -47,7 +77,7 @@ class prior():
         '''
         Calculate gradient of log probability w.r.t x
         Input
-            x: value of the random variable
+            x: value of the random variable, 2D array with dimension nparticles*nparameters
             grad: grad contains the gradient of likelihood w.r.t original variable
         Return: gradient including prior pdf
         '''
