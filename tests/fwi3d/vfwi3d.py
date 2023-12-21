@@ -113,14 +113,20 @@ def create_prior(config):
 
     return ppdf
 
-def write_samples(filename, pprior, start=0, chunk=10):
+def write_samples(filename, pprior, n=0, chunk=10):
 
+    f = h5py.File(filename,'r+')
+    samples = f['samples']
+    start = 0
+    if(n>0):
+        start = samples.shape[0] - n
+    if(start<0):
+        start = 0
     if(pprior.trans):
-        f = h5py.File(filename,'r+')
-        samples = f['samples']
         for i in range(start,samples.shape[0]):
             samples[i,:,:] = pprior.adjust(samples[i,:,:])
-        f.close()
+
+    f.close()
 
     return 0
 
@@ -198,7 +204,8 @@ if __name__=="__main__":
     print('Time taken: '+str(end-start)+' s')
 
     # write out results
-    write_samples(os.path.join(config.get('svgd','outpath'),'samples.hdf5'), ppdf)
+    nsamples = int((config.getint('svgd','iter')-config.getint('svgd','burn_in'))/config.getint('svgd','thin'))
+    write_samples(os.path.join(config.get('svgd','outpath'),'samples.hdf5'), ppdf, n=nsamples)
     with open(os.path.join(config.get('svgd','outpath'),'misfits.txt'),"ab") as f:
         np.savetxt(f,losses)
 
