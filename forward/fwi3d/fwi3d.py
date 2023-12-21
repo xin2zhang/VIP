@@ -63,12 +63,14 @@ class fwi3d():
         theta = self.prior.adjust(theta)
 
         t = time.time()
-        lglike, grad = self.fwi_gradient(theta)
+        loss, grad = self.fwi_gradient(theta)
+        lglike = -loss + self.prior.lnprob(theta)
         print('Simulation takes '+str(time.time()-t))
 
         # compute gradient including the prior
         grad, mask = self.prior.grad(theta, grad=grad)
         grad[:,self.mask] = 0
+        print(f'Average loss and negative log posterior: {np.mean(loss)} {np.mean(-lglike)}')
         print(f'Max. Mean and Median grad: {np.max(abs(grad))} {np.mean(abs(grad))} {np.median(abs(grad))}')
         #print(f'max, mean and median grads after transform: {np.max(abs(grad))} {np.mean(abs(grad))} {np.median(abs(grad))}')
 

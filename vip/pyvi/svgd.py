@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg as sla
 from vip.kernel.pykernel import *
 import vip.pyvi.optimizer as optm
 import h5py
@@ -128,7 +129,7 @@ class SVGD():
         if(chunks is None):
             chunks = theta.shape
 
-        loss, grad, mask = self.lnprob(theta)
+        logp, grad, mask = self.lnprob(theta)
         if(mask is None):
             mask = np.full((theta.shape),fill_value=False)
         if(mkernel is None):
@@ -137,9 +138,9 @@ class SVGD():
         #ksd, stepsize = pyksd(theta, grad, mkernel, kernel=self.kernel, h=self.h)
         kxy, grad = svgd_grad(theta, grad, kernel=self.kernel, w=mkernel, h=self.h, chunks=chunks)
         print(f'max, mean, median, and min grads for svgd: {np.max(abs(grad))} {np.mean(abs(grad))} {np.median(abs(grad))} {np.min(abs(grad))}')
-        print('Average loss: '+str(np.mean(loss)))
+        #print('Average loss: '+str(np.mean(-loss)))
 
-        return loss, grad, mask
+        return -logp, grad, mask
 
     def __dsample(self, theta, n_iter=100, stepsize=1e-2, gamma=1.0, decay_step=1, alpha=0.9, chunks=None):
 
@@ -153,6 +154,9 @@ class SVGD():
 
         # sampling
         for i in range(n_iter):
+
+            # start a new iteration
+            print(f'Iteration: {i}')
             #print(f'max, mean, median and min kernel: {np.max(abs(mkernel))} {np.mean(abs(mkernel))} {np.median(abs(mkernel))} {np.min(abs(mkernel))}')
             print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
             loss, grad, mask = self.grad(theta, mkernel=mkernel, chunks=chunks)
@@ -165,7 +169,7 @@ class SVGD():
             moment = alpha*moment + stepsize*grad
             theta += moment
             losses[i,:] = loss
-            print('Average loss: '+str(np.mean(loss)))
+            #print('Average loss: '+str(np.mean(loss)))
 
             # decay the stepsize if required
             if((i+1)%decay_step == 0):
@@ -178,7 +182,7 @@ class sSVGD():
     '''
     A class that implements stochastic SVGD algorithm.
     '''
-    def __init__(self, lnprob, kernel='rbf', h=1.0, mask=None, threshold=0.02,
+    def __init__(self, lnprob, kernel='rbf', h=1.0, metropolis=False, mask=None, threshold=0.02,
                  weight='grad', out='samples.hdf5'):
         '''
         lnprob: log of the probability density function, usually negtive misfit function
@@ -195,12 +199,86 @@ class sSVGD():
         self.h = h
         self.lnprob = lnprob
         self.kernel = kernel
+        self.metropolis = metropolis
         self.mask = mask
         self.out = out
         self.threshold = threshold
         self.weight = weight
         if(kernel=='rbf'):
             self.weight = 'constant'
+
+    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
+               burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
+        '''
+        Using ssvgd to sample a probability density function
+        Input
+            x0: initial value, shape (n,dim)
+            n_iter: number of iterations
+            stepsize: stepsize for each iteration
+            gamma: decaying rate for stepsize
+            decay_step: the number of steps to decay the stepsize
+            burn_in: burn_in period
+            thin: thining of the chain
+            alpha, beta: hyperparameter for sgd and adam, for sgd only alpha is ued
+            chunks: chunks of theta for calculation, default theta.shape
+        Return
+            losses: loss value for each iterations, shape (n_iter,n)
+            The final particles are stored at the hdf5 file specified by self.out, so no return samples
+        '''
+
+        # Check input
+        if x0 is None :
+            raise ValueError('x0 cannot be None!')
+
+        if(chunks is None):
+            chunks = x0.shape
+
+        # create a hdf5 file to store samples on disk
+        nsamples = int((n_iter-burn_in)/thin)
+        if(not os.path.isfile(self.out)):
+            f = h5py.File(self.out,'a')
+            samples = f.create_dataset('samples',(nsamples,x0.shape[0],x0.shape[1]),
+                                       maxshape=(None,x0.shape[0],x0.shape[1]),
+                                       compression="gzip", chunks=True)
+        else:
+            f = h5py.File(self.out,'a')
+            f['samples'].resize((f['samples'].shape[0]+nsamples),axis=0)
+            samples = f['samples']
+
+        # sampling
+        if(self.metropolis):
+            losses = self.ma_sample(x0, samples, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step,
+               burn_in=burn_in, thin=thin, alpha=alpha, beta=beta, chunks=chunks, optimizer=optimizer)
+        else:
+            losses = self.pl_sample(x0, samples, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step,
+               burn_in=burn_in, thin=thin, alpha=alpha, beta=beta, chunks=chunks, optimizer=optimizer)
+
+        # close hdf5 file
+        f.close()
+
+        return losses
+
+    def grad(self, theta, mkernel=None, chunks=None):
+        '''
+        Compute gradients for ssvgd update
+        Input
+            theta: the current value of variable (transformed), shape (n,dim)
+            mkernel: the vector of the diagonal matrix with length dim, if using a diagonal matrix kernel
+            chunks: chunks of theta for calculation, default theta.shape
+        Return
+            logp: log posterior pdf value across particles
+            sgrad: svgd gradients for each particles, shape (n,dim)
+            kxy: kernel matrix, shape (n,n)
+        '''
+
+        if(mkernel is None):
+            mkernel = np.full((theta.shape[1],),fill_value=1.0)
+
+        logp, grad, _ = self.lnprob(theta)
+        kxy, sgrad = svgd_grad(theta, grad, kernel=self.kernel, w=mkernel, h=self.h, chunks=chunks)
+        print(f'max, mean, median, and min grads for svgd: {np.max(abs(sgrad))} {np.mean(abs(sgrad))} {np.median(abs(sgrad))} {np.min(abs(sgrad))}')
+
+        return logp, sgrad, kxy
 
     def update(self, theta, step=1e-3, mkernel=None, chunks=None):
         '''
@@ -218,10 +296,8 @@ class sSVGD():
         if(mkernel is None):
             mkernel = np.full((theta.shape[1],),fill_value=1.0)
 
-        loss, grad, _ = self.lnprob(theta)
-        pgrad = np.copy(grad)
-        kxy, sgrad = svgd_grad(theta, grad, kernel=self.kernel, w=mkernel, h=self.h, chunks=chunks)
-        print(f'max, mean, median, and min grads for svgd: {np.max(abs(sgrad))} {np.mean(abs(sgrad))} {np.median(abs(sgrad))} {np.min(abs(sgrad))}')
+        # get svgd gradient and kernel matrix K
+        logp, sgrad, kxy = self.grad(theta, mkernel=mkernel, chunks=chunks)
 
         # calculate cholesky decomposition of kernel matrix K and generate random variable
         cholK = np.linalg.cholesky(2*kxy/theta.shape[0])
@@ -231,9 +307,74 @@ class sSVGD():
         if(self.mask is not None):
             update_step[:,self.mask] = 0
 
-        return update_step, loss, pgrad
+        return update_step, logp, sgrad
 
-    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1, pre_update=0, pre_step=1e-3,
+    def pl_sample(self, x0, samples, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
+               burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
+        '''
+        Using ssvgd to sample a probability density function
+        Input
+            x0: initial value, shape (n,dim)
+            n_iter: number of iterations
+            stepsize: stepsize for each iteration
+            gamma: decaying rate for stepsize
+            decay_step: the number of steps to decay the stepsize
+            burn_in: burn_in period
+            thin: thining of the chain
+            alpha, beta: hyperparameter for sgd and adam, for sgd only alpha is ued
+            chunks: chunks of theta for calculation, default theta.shape
+        Return
+            losses: loss value for each iterations, shape (n_iter,n)
+            The final particles are stored at the hdf5 file specified by self.out, so no return samples
+        '''
+
+        # Check input
+        if x0 is None :
+            raise ValueError('x0 cannot be None!')
+
+        if(chunks is None):
+            chunks = x0.shape
+
+        theta = np.copy(x0).astype(np.float64)
+        losses = np.zeros((n_iter,x0.shape[0]))
+
+        # initialise some variables
+        nsamples = int((n_iter-burn_in)/thin)
+        sample_count = 0
+        prev_grad = np.zeros(x0.shape,dtype=np.float64)
+        prev_theta = np.zeros(x0.shape,dtype=np.float64)
+        mkernel = np.full((theta.shape[1],),fill_value=1.0, dtype=np.float64)
+        w = weight(dim=theta.shape[1], approx=self.weight, threshold=self.threshold)
+
+        # sampling
+        for i in range(n_iter):
+
+            # start a new iteration
+            print(f'Iteration: {i}')
+            #print(f'max, mean, median and min kernel: {np.max(abs(mkernel))} {np.mean(abs(mkernel))} {np.median(abs(mkernel))} {np.min(abs(mkernel))}')
+            print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
+            update_step, logp, pgrad = self.update(theta, step=stepsize, mkernel=mkernel, chunks=chunks)
+
+            mkernel = w.diag(theta, prev_theta, pgrad, prev_grad)
+            prev_grad = np.copy(pgrad)
+            prev_theta = np.copy(theta)
+
+            theta = theta + update_step
+            losses[i,:] = -logp
+            #print('Average loss: '+str(np.mean(-logp)))
+
+            # decay the stepsize if required
+            if((i+1)%decay_step == 0):
+                stepsize = stepsize * gamma
+
+            # after burn_in then collect samples
+            if(i>=burn_in and (i-burn_in)%thin==0):
+                samples[-nsamples+sample_count,:,:] = np.copy(theta)
+                sample_count += 1
+
+        return losses
+
+    def ma_sample(self, x0, samples, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
                burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
         '''
         Using ssvgd to sample a probability density function
@@ -260,52 +401,76 @@ class sSVGD():
             chunks = x0.shape
 
         theta = np.copy(x0).astype(np.float64)
-        losses = np.zeros((n_iter+pre_update,x0.shape[0]))
-
-        # create a hdf5 file to store samples on disk
-        nsamples = int((n_iter-burn_in)/thin)
-        if(not os.path.isfile(self.out)):
-            f = h5py.File(self.out,'a')
-            samples = f.create_dataset('samples',(nsamples,x0.shape[0],x0.shape[1]),
-                                       maxshape=(None,x0.shape[0],x0.shape[1]),
-                                       compression="gzip", chunks=True)
-        else:
-            f = h5py.File(self.out,'a')
-            f['samples'].resize((f['samples'].shape[0]+nsamples),axis=0)
-            samples = f['samples']
+        losses = np.zeros((n_iter,x0.shape[0]))
 
         # initialise some variables
-        sample_count = 0
-        prev_grad = np.zeros(x0.shape,dtype=np.float64)
-        prev_theta = np.zeros(x0.shape,dtype=np.float64)
+        nsamples = int((n_iter-burn_in)/thin)
+        sample_count = 0; accepted_count = 0
         mkernel = np.full((theta.shape[1],),fill_value=1.0, dtype=np.float64)
-        w = weight(dim=theta.shape[1], approx=self.weight, threshold=self.threshold)
+        logp, sgrad, kxy = self.grad(theta, mkernel=mkernel, chunks=chunks)
+        cholK = np.linalg.cholesky(2*kxy/theta.shape[0])
 
-        # pre-update for stability
-        for i in range(pre_update):
-            print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
-            update_step, loss, pgrad = self.update(theta, step=pre_step, mkernel=mkernel, chunks=chunks)
-            mkernel = w.diag(theta, prev_theta, pgrad, prev_grad)
-            prev_grad = np.copy(pgrad)
-            prev_theta = np.copy(theta)
+        # save computed info for the current model
+        prev_logp = logp
+        prev_grad = sgrad
+        prev_kxy = kxy
+        prev_cholK = cholK
+        prev_theta = theta
 
-            theta = theta + update_step
-            losses[i,:] = loss
-            print('Average loss: '+str(np.mean(loss)))
-
-        # real sampling
+        # sampling
         for i in range(n_iter):
-            #print(f'max, mean, median and min kernel: {np.max(abs(mkernel))} {np.mean(abs(mkernel))} {np.median(abs(mkernel))} {np.min(abs(mkernel))}')
+
+            # start a new iteration
+            print(f'Iteration: {i}')
             print(f'max, mean, median and min theta: {np.max(abs(theta))} {np.mean(abs(theta))} {np.median(abs(theta))} {np.min(abs(theta))}')
-            update_step, loss, pgrad = self.update(theta, step=stepsize, mkernel=mkernel, chunks=chunks)
 
-            mkernel = w.diag(theta, prev_theta, pgrad, prev_grad)
-            prev_grad = np.copy(pgrad)
-            prev_theta = np.copy(theta)
+            # update on the current model
+            random_update = np.sqrt(1./mkernel)*np.matmul(cholK,np.random.normal(size=theta.shape))
+            update_step = stepsize*sgrad + np.sqrt(stepsize)*random_update
+            if(self.mask is not None):
+                update_step[:,self.mask] = 0
 
+            # update theta
             theta = theta + update_step
-            losses[i+pre_update,:] = loss
-            print('Average loss: '+str(np.mean(loss)))
+
+            # compute forward proposal pdf q(theta_k+1|theta_k)
+            update = theta - prev_theta - stepsize*sgrad # masked variables have no effect on proposal pdf
+            pvar = sla.solve_triangular(cholK,update)
+            forward_plogp = -0.25/stepsize*np.sum(pvar.flatten()**2) - 0.5*sla.det(2*kxy/theta.shape[0]) - 0.5*pvar.flatten().size*np.log(2*np.pi)
+
+            # compute info for updated theta
+            logp, sgrad, kxy = self.grad(theta, mkernel=mkernel, chunks=chunks)
+
+            # compute reverse proposal pdf q(theta_k|theta_k+1)
+            cholK = np.linalg.cholesky(2*kxy/theta.shape[0])
+            reverse_update = prev_theta - theta - stepsize*sgrad
+            pvar = sla.solve_triangular(cholK,reverse_update)
+            reverse_plogp = -0.25/stepsize*np.sum(pvar.flatten()**2) - 0.5*sla.det(2*kxy/theta.shape[0]) - 0.5*pvar.flatten().size*np.log(2*np.pi)
+
+            # compute acceptance ratio
+            acceptance_ratio = np.sum(logp) + reverse_plogp - ( np.sum(prev_logp) + forward_plogp )
+            print(f'log pdf change: {np.sum(logp-prev_logp)} {reverse_plogp-forward_plogp}')
+            acceptance_ratio = min(0,acceptance_ratio)
+
+            if( np.log(np.random.uniform()) < acceptance_ratio ):
+                # update previously save info if accepted
+                prev_theta = theta
+                prev_logp = logp
+                prev_grad = sgrad
+                prev_kxy = kxy
+                prev_cholK = cholK
+                accepted_count = accepted_count + 1
+            else:
+                # recover info if rejected
+                theta = prev_theta
+                kxy = prev_kxy
+                cholK = prev_cholK
+                logp = prev_logp
+                sgrad = prev_grad
+
+
+            losses[i,:] = -logp
+            print(f'Real time and total acceptance rate: {np.exp(acceptance_ratio)} {accepted_count*1.0/(i+1)}')
 
             # decay the stepsize if required
             if((i+1)%decay_step == 0):
@@ -315,8 +480,6 @@ class sSVGD():
             if(i>=burn_in and (i-burn_in)%thin==0):
                 samples[-nsamples+sample_count,:,:] = np.copy(theta)
                 sample_count += 1
-
-        f.close()
 
         return losses
 

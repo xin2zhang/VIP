@@ -127,6 +127,7 @@ class optimizer():
                 step[i] = step[i-1]
 
         for i in range(n_iter):
+            print(f'Iteration: {i}')
             if(self.method=='sgd'):
                 update, loss = self.sgd(theta,step[i])
             elif(self.method=='adagrad'):
