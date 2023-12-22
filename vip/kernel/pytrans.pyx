@@ -42,8 +42,8 @@ def pyjac(np.ndarray[double,ndim=2] x,
     m = x.shape[0]
     n = x.shape[1]
 
-    cdef double jac
-    many_log_jacobian_c(&m,&n,&x[0,0],&lb[0],&ub[0],&jac)
+    cdef np.ndarray[double,ndim=1] jac = np.zeros((m,), dtype=np.float64)
+    many_log_jacobian_c(&m,&n,&x[0,0],&lb[0],&ub[0],&jac[0])
     return jac
 
 def pytrans_grad(np.ndarray[double,ndim=2] grad,

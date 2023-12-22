@@ -79,7 +79,13 @@ contains
             elseif(.not.ieee_is_finite(lower_bounds(i)) .and. ieee_is_finite(upper_bounds(i)))then
                 log_jacobian = log_jacobian + qvals_trans(i)
             else
-                log_jacobian = log_jacobian + log(upper_bounds(i)-lower_bounds(i)) + qvals_trans(i) - 2*log(1+exp(qvals_trans(i)))
+                if(qvals_trans(i)>=0)then
+                    log_jacobian = log_jacobian + log(upper_bounds(i)-lower_bounds(i)) &
+                        - qvals_trans(i) - 2*log(1+exp(-qvals_trans(i)))
+                else
+                    log_jacobian = log_jacobian + log(upper_bounds(i)-lower_bounds(i)) &
+                        + qvals_trans(i) - 2*log(1+exp(qvals_trans(i)))
+                endif
             endif
         enddo
 
@@ -169,13 +175,12 @@ contains
         real(kind=dp), dimension(:,:), intent(in) :: qvals_trans
         real(kind=dp), dimension(:), intent(in) :: lower_bounds
         real(kind=dp), dimension(:), intent(in) :: upper_bounds
-        real(kind=dp), intent(out) :: jac
+        real(kind=dp), dimension(:), intent(out) :: jac
 
         integer n, i
 
-        jac = 0
         do i = 1, size(qvals_trans,2)
-            jac = jac + log_jacobian(qvals_trans(:,i),lower_bounds,upper_bounds)
+            jac(i) = log_jacobian(qvals_trans(:,i),lower_bounds,upper_bounds)
         enddo
 
     endsubroutine
@@ -264,7 +269,7 @@ contains
         integer(c_int), intent(in) :: m, n
         real(kind=dp), intent(in) :: qvals(n,m)
         real(kind=dp), intent(in) :: lower_bnds(n), upper_bnds(n)
-        real(kind=dp), intent(out) :: jac
+        real(kind=dp), intent(out) :: jac(m)
         call many_log_jacobian(qvals,lower_bnds,upper_bnds,jac)
     endsubroutine
 

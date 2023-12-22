@@ -1,5 +1,6 @@
 import numpy as np
 from vip.prior.transform import trans, trans_grad
+from vip.kernel.pytrans import pyjac
 
 class prior():
     '''
@@ -44,6 +45,9 @@ class prior():
         if(self.smooth):
             logsp = self.logp_smooth(x)
             logp = logp + logsp
+
+        if(self.transform):
+            logp = logp + pyjac(x,self.lb,self.ub)
 
         return logp
 
