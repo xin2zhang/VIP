@@ -59,9 +59,9 @@ posterior pdf function w.r.t parameters. For example,
     def dlnprob(theta):
         # theta has a shape of (num_of_particles, num_of_parameters)
         # some calculation of theta
-        return loss, grad, None
+        return logp, grad, None
 
-where loss is the misfit value (or negative logarithm of posterior pdf value), grad is the gradient. The third
+where logp is the logarithm of (unnormalized) posterior pdf value (or negative misfit value), grad is the gradient. The third
 output is used to return other auxiliary variables (e.g., a mask array), and can be safely ignored. Thereafter,
 
 .. code-block:: python
@@ -72,23 +72,23 @@ This creates a SVGD method which uses radial basis function kernel. To sample th
 
 .. code-block:: python
 
-    losses = svgd.sample(x0, n_iter=1000, stepsize=0.01, optimizer='sgd')
+    losses, x = svgd.sample(x0, n_iter=1000, stepsize=0.01, optimizer='sgd')
 
-where ``x0`` is a variable containing starting particles with a shape of ``(num_of_particles, num_of_parameters)``. This
-will run the SVGD algorithm for 1,000 iterations using stochastic gradient descent (sgd) algorithm. Supported optimization
+where ``x0`` and ``x`` are variables containing starting and final particles with a shape of ``(num_of_particles, num_of_parameters)`` 
+respectively. This will run the SVGD algorithm for 1,000 iterations using stochastic gradient descent (sgd) algorithm. Supported optimization
 algorithms include ``sgd``, ``adagrad``, ``adadelta`` and ``adam``. To use sSVGD algorithm,
 
 .. code-block:: python
 
     ssvgd = sSVGD(dlnprob, kernel='rbf')
-    losses = ssvgd.sample(x0, n_iter=2000, stepsize=0.01, burn_in=1000)
+    losses, x = ssvgd.sample(x0, n_iter=2000, stepsize=0.01, burn_in=1000)
 
 This will sample the posterior using sSVGD method for 2,000 iterations with a burn-in period of 1,000. To use ADVI,
 
 .. code-block:: python
 
     advi = ADVI(dlnprob, kernel='meanfield')
-    phi, losses = advi.sample(n_iter=2000, stepsize=0.01, optimizer='adam')
+    losses, phi = advi.sample(n_iter=2000, stepsize=0.01, optimizer='adam')
 
 This runs mean-field ADVI for 2,000 iterations using the ``adam`` optimization algorithm. The vector ``phi`` contains the mean (first half) 
 and the logarithm of the standard deviation (second half) of the final Gaussian distribution. To use fullrank ADVI, set kernel to "fullrank".
@@ -101,7 +101,7 @@ Examples
 - For a complete 2D travel time tomography example, please see the example in ``tests/tomo2d``.
 - For an example implementation of 3D Full-waveform inversion, please see the example in ``tests/fwi3d``. Note
   that this requires users to provide an external 3D FWI code to calculate misfit values and gradients. See details
-  in ``forward/fwi``.
+  in ``forward/fwi3d``.
 
 References
 ----------
