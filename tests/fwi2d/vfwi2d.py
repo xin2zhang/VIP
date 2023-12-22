@@ -187,7 +187,7 @@ if __name__=="__main__":
     print(f'Iteration: {iteration}')
     print(f'Stepsize, decay rate and final decay: {stepsize} {gamma} {final_decay}')
     start = time.time()
-    losses = svgd.sample(x0,
+    losses, x = svgd.sample(x0,
                     n_iter=config.getint('svgd','iter'),
                     stepsize=stepsize, gamma=gamma,
                     optimizer=config['svgd']['optimizer'],

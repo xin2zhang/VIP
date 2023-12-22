@@ -112,7 +112,7 @@ class SVGD():
         samples[0,:,:] = np.copy(theta)
         f.close()
 
-        return losses
+        return losses, theta
 
     def grad(self, theta, mkernel=None, chunks=None):
         '''
@@ -182,7 +182,7 @@ class sSVGD():
     '''
     A class that implements stochastic SVGD algorithm.
     '''
-    def __init__(self, lnprob, kernel='rbf', h=1.0, metropolis=False, mask=None, threshold=0.02,
+    def __init__(self, lnprob, kernel='rbf', h=1.0, mask=None, threshold=0.02,
                  weight='grad', out='samples.hdf5'):
         '''
         lnprob: log of the probability density function, usually negtive misfit function
@@ -199,7 +199,6 @@ class sSVGD():
         self.h = h
         self.lnprob = lnprob
         self.kernel = kernel
-        self.metropolis = metropolis
         self.mask = mask
         self.out = out
         self.threshold = threshold
@@ -207,13 +206,15 @@ class sSVGD():
         if(kernel=='rbf'):
             self.weight = 'constant'
 
-    def sample(self, x0, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
+    def sample(self, x0, n_iter=1000, metropolis=False, stepsize=1e-2, gamma=1.0, decay_step=1,
                burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
         '''
         Using ssvgd to sample a probability density function
         Input
             x0: initial value, shape (n,dim)
             n_iter: number of iterations
+            metropolis: If true, use metropolis-hastings adjust. This is more accurate, but usually requires very small
+                        stepsize, which means more computational cost
             stepsize: stepsize for each iteration
             gamma: decaying rate for stepsize
             decay_step: the number of steps to decay the stepsize
@@ -246,17 +247,17 @@ class sSVGD():
             samples = f['samples']
 
         # sampling
-        if(self.metropolis):
-            losses = self.ma_sample(x0, samples, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step,
+        if(metropolis):
+            losses, theta = self.ma_sample(x0, samples, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step,
                burn_in=burn_in, thin=thin, alpha=alpha, beta=beta, chunks=chunks, optimizer=optimizer)
         else:
-            losses = self.pl_sample(x0, samples, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step,
+            losses, theta = self.pl_sample(x0, samples, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step,
                burn_in=burn_in, thin=thin, alpha=alpha, beta=beta, chunks=chunks, optimizer=optimizer)
 
         # close hdf5 file
         f.close()
 
-        return losses
+        return losses, theta
 
     def grad(self, theta, mkernel=None, chunks=None):
         '''
@@ -372,7 +373,7 @@ class sSVGD():
                 samples[-nsamples+sample_count,:,:] = np.copy(theta)
                 sample_count += 1
 
-        return losses
+        return losses, theta
 
     def ma_sample(self, x0, samples, n_iter=1000, stepsize=1e-2, gamma=1.0, decay_step=1,
                burn_in=100, thin=2, alpha=0.9, beta=0.95, chunks=None, optimizer=None):
@@ -481,7 +482,7 @@ class sSVGD():
                 samples[-nsamples+sample_count,:,:] = np.copy(theta)
                 sample_count += 1
 
-        return losses
+        return losses, theta
 
 class weight():
     '''

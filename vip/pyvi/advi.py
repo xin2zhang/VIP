@@ -104,4 +104,4 @@ class ADVI():
         x, losses = op.optim(x, n_iter=n_iter, stepsize=stepsize, gamma=gamma, decay_step=decay_step)
 
 
-        return x, losses
+        return losses, x

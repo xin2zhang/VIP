@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 os.environ['HDF5_USE_FILE_LOCKING']='FALSE'
+os.environ['OMP_NUM_THREADS']='4'
 
 def init_tomo(config):
     Path(config.get('svgd','outpath')).mkdir(parents=True, exist_ok=True)
@@ -181,7 +182,7 @@ if __name__=="__main__":
     print(f'Iteration: {iteration}')
     print(f'Stepsize, decay rate and final decay: {stepsize} {gamma} {final_decay}')
     start = time.time()
-    losses = svgd.sample(x0,
+    losses, x = svgd.sample(x0,
                     n_iter=config.getint('svgd','iter'),
                     stepsize=stepsize, gamma=gamma,
                     optimizer=config['svgd']['optimizer'],
