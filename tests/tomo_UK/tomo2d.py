@@ -5,7 +5,7 @@ import os
 import h5py
 
 from vip.prior.transform import trans
-from forward.tomo.tomo2d import tomo2d
+from forward.tomo2d.tomo2d import tomo2d
 from vip.pyvi.svgd import SVGD, sSVGD
 
 from datetime import datetime
@@ -27,7 +27,7 @@ def init_tomo(config):
 
 
 def generate_init(n=1,lb=0,ub=1e8, transform=True):
-    eps = np.finfo(np.float).eps
+    eps = np.finfo(np.float64).eps
     x = lb + (ub-lb)*np.random.uniform(low=eps,high=1-eps,size=(n,lb.shape[0]))
     if(transform):
         x = trans(x.reshape((-1,lb.shape[0])),lb=lb, ub=ub, trans=1)
@@ -184,7 +184,6 @@ if __name__=="__main__":
     losses = svgd.sample(x0,
                     n_iter=config.getint('svgd','iter'),
                     stepsize=stepsize, gamma=gamma,
-                    pre_update=0, pre_step=1e-3,
                     optimizer=config['svgd']['optimizer'],
                     burn_in=config.getint('svgd','burn_in'),
                     thin=config.getint('svgd','thin'),
