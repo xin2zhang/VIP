@@ -408,7 +408,7 @@ class sSVGD():
         sample_count = 0; accepted_count = 0
         mkernel = np.full((theta.shape[1],),fill_value=1.0, dtype=np.float64)
         logp, sgrad, kxy = self.grad(theta, mkernel=mkernel, chunks=chunks)
-        cholK = np.linalg.cholesky(2*kxy/theta.shape[0])
+        cholK = np.linalg.cholesky(kxy/theta.shape[0])
 
         # save computed info for the current model
         prev_logp = logp
@@ -426,7 +426,7 @@ class sSVGD():
 
             # update on the current model
             random_update = np.sqrt(1./mkernel)*np.matmul(cholK,np.random.normal(size=theta.shape))
-            update_step = stepsize*sgrad + np.sqrt(stepsize)*random_update
+            update_step = stepsize*sgrad + np.sqrt(2*stepsize)*random_update
             if(self.mask is not None):
                 update_step[:,self.mask] = 0
 
@@ -436,16 +436,16 @@ class sSVGD():
             # compute forward proposal pdf q(theta_k+1|theta_k)
             update = theta - prev_theta - stepsize*sgrad # masked variables have no effect on proposal pdf
             pvar = sla.solve_triangular(cholK,update)
-            forward_plogp = -0.25/stepsize*np.sum(pvar.flatten()**2) - 0.5*sla.det(2*kxy/theta.shape[0]) - 0.5*pvar.flatten().size*np.log(2*np.pi)
+            forward_plogp = -0.25/stepsize*np.sum(pvar.flatten()**2) - 0.5*sla.det(2*stepsize*kxy/theta.shape[0]) - 0.5*pvar.flatten().size*np.log(2*np.pi)
 
             # compute info for updated theta
             logp, sgrad, kxy = self.grad(theta, mkernel=mkernel, chunks=chunks)
 
             # compute reverse proposal pdf q(theta_k|theta_k+1)
-            cholK = np.linalg.cholesky(2*kxy/theta.shape[0])
+            cholK = np.linalg.cholesky(kxy/theta.shape[0])
             reverse_update = prev_theta - theta - stepsize*sgrad
             pvar = sla.solve_triangular(cholK,reverse_update)
-            reverse_plogp = -0.25/stepsize*np.sum(pvar.flatten()**2) - 0.5*sla.det(2*kxy/theta.shape[0]) - 0.5*pvar.flatten().size*np.log(2*np.pi)
+            reverse_plogp = -0.25/stepsize*np.sum(pvar.flatten()**2) - 0.5*sla.det(2*stepsize*kxy/theta.shape[0]) - 0.5*pvar.flatten().size*np.log(2*np.pi)
 
             # compute acceptance ratio
             acceptance_ratio = np.sum(logp) + reverse_plogp - ( np.sum(prev_logp) + forward_plogp )
