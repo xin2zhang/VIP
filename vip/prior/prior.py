@@ -59,8 +59,9 @@ class prior():
         '''
         dx = self.L*x.T
         self.L = self.L.eliminate_zeros()
-        elements = self.L.data
-        logsp = -0.5*np.sum(dx**2,axis=0) - np.sum(np.log(elements[elements>0])) - 0.5*self.L.shape[0]*np.log(2*np.pi)
+        num_elements = self.L.indptr[1:] - self.L.indptr[:-1]
+        diag = self.L.diagonal()/(num_elements-1)
+        logsp = -0.5*np.sum(dx**2,axis=0) + np.sum(np.log(np.abs(diag))) - 0.5*self.L.shape[0]*np.log(2*np.pi)
 
         return logsp
 
