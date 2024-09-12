@@ -105,6 +105,7 @@ Examples
 
 References
 ----------
+- Zhang, X., & Curtis, A. (2024). VIP-Variational Inversion Package with example implementations of Bayesian tomographic imaging. Seismica, 3(1).
 - Zhang, X., & Curtis, A. (2020). Seismic tomography using variational inference methods. Journal of Geophysical Research: Solid Earth, 125(4), e2019JB018589.
 - Zhang, X., Nawaz, M. A., Zhao, X., & Curtis, A. (2021). An introduction to variational inference in geophysical inverse problems. In Advances in Geophysics (Vol. 62, pp. 73-140). Elsevier.
 - Zhang, X., Lomas, A., Zhou, M., Zheng, Y., & Curtis, A. (2023). 3-D Bayesian variational full waveform inversion. Geophysical Journal International, 234(1), 546-561.
