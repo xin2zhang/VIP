@@ -449,9 +449,11 @@ DO i=1,nsrc
     !if required.
     
     IF(uar .eq. 0 .OR. wrgf.eq.i.OR.wrgf.LT.0)THEN
+        !write(*,*) 'Calculate derivatives'
         fdm = 0
         CALL rpaths(wrgf,uar,i,x,z,rays,fdm)
-        dtdv(:,:,:,i) = fdm(0:nvz-1,0:nvx-1,:)
+        !dtdv(:,:,:,i) = fdm(0:nvz-1,0:nvx-1,:)
+        dtdv(:,:,:,i) = fdm(1:nvz,1:nvx,:)
         crazyray=crazyray+crazyrp
     ENDIF
      
@@ -838,7 +840,7 @@ REAL(KIND=i10) :: v,w,rigz,rigx,dinc,scx,scz
 REAL(KIND=i10) :: dtx,dtz,drx,drz,produ,sred
 REAL(KIND=i10) :: srednew
 REAL(KIND=i10), DIMENSION (:), ALLOCATABLE :: rgx,rgz,rgxnew,rgznew
-REAL(KIND=i10), DIMENSION (:,:,:) :: fdm
+REAL(KIND=i10) :: fdm(0:nvz+1,0:nvx+1,nrc)
 REAL(KIND=i10), DIMENSION (4) :: vrat,vi,wi,vio,wio
 
 INTEGER totpts,srrecip
